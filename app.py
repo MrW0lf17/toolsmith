@@ -290,11 +290,9 @@ def login():
     
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     
-    # Get the base URL and construct the callback URL
-    base_url = get_base_url()
-    callback_url = urljoin(base_url, 'login/callback')
-    
-    app.logger.info(f"Login callback URL: {callback_url}")
+    # Hard-coded callback URL that matches exactly with Google Console
+    callback_url = "https://toolsmith.onrender.com/login/callback"
+    app.logger.info(f"Using callback URL: {callback_url}")
     
     # Use library to construct the request for Google login
     request_uri = client.prepare_request_uri(
@@ -309,8 +307,7 @@ def callback():
     # Get authorization code Google sent back
     code = request.args.get("code")
     if not code:
-        app.logger.error("No code received from Google")
-        return "Authentication failed", 400
+        return "Authorization code not received", 400
     
     # Find out what URL to hit to get tokens
     google_provider_cfg = get_google_provider_cfg()
@@ -319,9 +316,8 @@ def callback():
     
     token_endpoint = google_provider_cfg["token_endpoint"]
     
-    # Get the base URL and construct the callback URL
-    base_url = get_base_url()
-    callback_url = urljoin(base_url, 'login/callback')
+    # Hard-coded callback URL that matches exactly with Google Console
+    callback_url = "https://toolsmith.onrender.com/login/callback"
     
     try:
         # Prepare and send request to get tokens
@@ -338,7 +334,7 @@ def callback():
             data=body,
             auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
         )
-        
+
         # Parse the tokens
         client.parse_request_body_response(json.dumps(token_response.json()))
         
@@ -372,7 +368,7 @@ def callback():
             
     except Exception as e:
         app.logger.error(f"Error in callback: {str(e)}")
-        return "Error during authentication", 500
+        return f"Error during authentication: {str(e)}", 500
 
 @app.route('/logout')
 @login_required
