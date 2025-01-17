@@ -11,6 +11,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 from functools import lru_cache
+import sys
 
 # Load environment variables
 load_dotenv()
@@ -20,10 +21,19 @@ app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 
 # Handle Render PostgreSQL URL
 database_url = os.environ.get("DATABASE_URL")
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or "sqlite:///app.db"
+if database_url:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    app.logger.error("No DATABASE_URL found in environment")
+    sys.exit(1)
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
 
 # Configure logging
 if not app.debug:
@@ -423,10 +433,14 @@ def download_image(image_id):
         print(f"Error downloading image: {str(e)}")
         return "Error downloading image", 500
 
-with app.app_context():
-    db.create_all()
-
 if __name__ == '__main__':
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as e:
+            app.logger.error(f"Error creating database tables: {e}")
+            sys.exit(1)
+    
     if app.debug:
         app.run(debug=True, ssl_context="adhoc")
     else:

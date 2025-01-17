@@ -3,7 +3,7 @@ services:
     name: imggenerator
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: python -c "from app import app, db; app.app_context().push(); db.create_all()" && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -27,4 +27,5 @@ services:
 databases:
   - name: imggenerator_db
     databaseName: imggenerator
-    user: imggenerator 
+    user: imggenerator
+    plan: free 
