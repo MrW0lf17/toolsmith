@@ -12,6 +12,7 @@ from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 from functools import lru_cache
 import sys
+from urllib.parse import urljoin
 
 # Load environment variables
 load_dotenv()
@@ -55,6 +56,14 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     app.logger.error("Google OAuth credentials not configured!")
 
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+
+# Function to get base URL
+def get_base_url():
+    if os.environ.get('FLASK_ENV') == 'production':
+        return "https://toolsmith.onrender.com"
+    if request.headers.get('X-Forwarded-Proto') == 'https':
+        return f"https://{request.host}"
+    return request.base_url.rsplit('/', 1)[0]
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -281,8 +290,11 @@ def login():
     
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     
-    # Use exact callback URL that matches Google Console configuration
-    callback_url = "https://toolsmith.onrender.com/login/callback"
+    # Get the base URL and construct the callback URL
+    base_url = get_base_url()
+    callback_url = urljoin(base_url, 'login/callback')
+    
+    app.logger.info(f"Login callback URL: {callback_url}")
     
     # Use library to construct the request for Google login
     request_uri = client.prepare_request_uri(
@@ -296,6 +308,9 @@ def login():
 def callback():
     # Get authorization code Google sent back
     code = request.args.get("code")
+    if not code:
+        app.logger.error("No code received from Google")
+        return "Authentication failed", 400
     
     # Find out what URL to hit to get tokens
     google_provider_cfg = get_google_provider_cfg()
@@ -304,54 +319,60 @@ def callback():
     
     token_endpoint = google_provider_cfg["token_endpoint"]
     
-    # Use exact callback URL that matches Google Console configuration
-    callback_url = "https://toolsmith.onrender.com/login/callback"
+    # Get the base URL and construct the callback URL
+    base_url = get_base_url()
+    callback_url = urljoin(base_url, 'login/callback')
     
-    # Prepare and send request to get tokens
-    token_url, headers, body = client.prepare_token_request(
-        token_endpoint,
-        authorization_response=request.url,
-        redirect_url=callback_url,
-        code=code,
-    )
-    
-    token_response = requests.post(
-        token_url,
-        headers=headers,
-        data=body,
-        auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
-    )
-    
-    # Parse the tokens
-    client.parse_request_body_response(json.dumps(token_response.json()))
-    
-    # Get user info from Google
-    userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
-    uri, headers, body = client.add_token(userinfo_endpoint)
-    userinfo_response = requests.get(uri, headers=headers, data=body)
-    
-    if userinfo_response.json().get("email_verified"):
-        unique_id = userinfo_response.json()["sub"]
-        users_email = userinfo_response.json()["email"]
-        users_name = userinfo_response.json()["name"]
-        picture = userinfo_response.json()["picture"]
+    try:
+        # Prepare and send request to get tokens
+        token_url, headers, body = client.prepare_token_request(
+            token_endpoint,
+            authorization_response=request.url,
+            redirect_url=callback_url,
+            code=code,
+        )
         
-        # Create or update user
-        user = User.query.filter_by(email=users_email).first()
-        if not user:
-            user = User(
-                email=users_email,
-                name=users_name,
-                profile_pic=picture,
-                credits=10
-            )
-            db.session.add(user)
-            db.session.commit()
+        token_response = requests.post(
+            token_url,
+            headers=headers,
+            data=body,
+            auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
+        )
         
-        login_user(user)
-        return redirect(url_for('dashboard'))
-    else:
-        return "User email not verified by Google.", 400
+        # Parse the tokens
+        client.parse_request_body_response(json.dumps(token_response.json()))
+        
+        # Get user info from Google
+        userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
+        uri, headers, body = client.add_token(userinfo_endpoint)
+        userinfo_response = requests.get(uri, headers=headers, data=body)
+        
+        if userinfo_response.json().get("email_verified"):
+            unique_id = userinfo_response.json()["sub"]
+            users_email = userinfo_response.json()["email"]
+            users_name = userinfo_response.json()["name"]
+            picture = userinfo_response.json()["picture"]
+            
+            # Create or update user
+            user = User.query.filter_by(email=users_email).first()
+            if not user:
+                user = User(
+                    email=users_email,
+                    name=users_name,
+                    profile_pic=picture,
+                    credits=10
+                )
+                db.session.add(user)
+                db.session.commit()
+            
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        else:
+            return "User email not verified by Google.", 400
+            
+    except Exception as e:
+        app.logger.error(f"Error in callback: {str(e)}")
+        return "Error during authentication", 500
 
 @app.route('/logout')
 @login_required
