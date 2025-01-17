@@ -281,16 +281,13 @@ def login():
     
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     
-    # Get the correct base URL for the environment
-    if os.environ.get('FLASK_ENV') == 'production':
-        base_url = "https://toolsmith.onrender.com"
-    else:
-        base_url = request.base_url.rsplit('/login', 1)[0]
+    # Use exact callback URL that matches Google Console configuration
+    callback_url = "https://toolsmith.onrender.com/login/callback"
     
     # Use library to construct the request for Google login
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        redirect_uri=f"{base_url}/login/callback",
+        redirect_uri=callback_url,
         scope=["openid", "email", "profile"],
     )
     return redirect(request_uri)
@@ -307,17 +304,14 @@ def callback():
     
     token_endpoint = google_provider_cfg["token_endpoint"]
     
-    # Get the correct base URL for the environment
-    if os.environ.get('FLASK_ENV') == 'production':
-        base_url = "https://toolsmith.onrender.com/login/callback"
-    else:
-        base_url = request.base_url
+    # Use exact callback URL that matches Google Console configuration
+    callback_url = "https://toolsmith.onrender.com/login/callback"
     
     # Prepare and send request to get tokens
     token_url, headers, body = client.prepare_token_request(
         token_endpoint,
         authorization_response=request.url,
-        redirect_url=base_url,
+        redirect_url=callback_url,
         code=code,
     )
     
