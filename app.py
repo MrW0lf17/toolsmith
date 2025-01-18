@@ -73,8 +73,18 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# OAuth 2 client setup
-client = WebApplicationClient(GOOGLE_CLIENT_ID)
+# Initialize OAuth properly
+client = None
+
+def init_oauth():
+    global client
+    if GOOGLE_CLIENT_ID:
+        client = WebApplicationClient(GOOGLE_CLIENT_ID)
+    else:
+        app.logger.error("Google OAuth client ID not configured!")
+
+# Call initialization after app creation
+init_oauth()
 
 # API Configuration
 API_KEY = os.environ.get('FLUX_API_KEY')
@@ -126,8 +136,14 @@ def test_login():
 
 def get_google_provider_cfg():
     try:
-        return requests.get(GOOGLE_DISCOVERY_URL).json()
-    except:
+        response = requests.get(
+            GOOGLE_DISCOVERY_URL,
+            timeout=5  # Add timeout
+        )
+        response.raise_for_status()  # Raise exception for bad status codes
+        return response.json()
+    except Exception as e:
+        app.logger.error(f"Error fetching Google configuration: {str(e)}")
         return None
 
 class TranslationError(Exception):
@@ -286,25 +302,35 @@ def index():
 
 @app.route('/login')
 def login():
-    # Find out what URL to hit for Google login
-    google_provider_cfg = get_google_provider_cfg()
-    if not google_provider_cfg:
-        app.logger.error("Error loading Google configuration")
-        return "Error loading Google configuration", 500
-    
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
-    
-    # Use the base URL function to dynamically determine the callback URL
-    callback_url = urljoin(get_base_url(), "/login/callback")
-    app.logger.info(f"Using callback URL: {callback_url}")
-    
-    # Use library to construct the request for Google login
-    request_uri = client.prepare_request_uri(
-        authorization_endpoint,
-        redirect_uri=callback_url,
-        scope=["openid", "email", "profile"],
-    )
-    return redirect(request_uri)
+    if not client:
+        app.logger.error("OAuth client not initialized")
+        flash("Login service not properly configured", "error")
+        return redirect(url_for('index'))
+
+    try:
+        google_provider_cfg = get_google_provider_cfg()
+        if not google_provider_cfg:
+            app.logger.error("Error loading Google configuration")
+            flash("Login service temporarily unavailable", "error")
+            return redirect(url_for('index'))
+        
+        authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+        
+        # Use the base URL function to dynamically determine the callback URL
+        callback_url = urljoin(get_base_url(), "login/callback")
+        app.logger.info(f"Using callback URL: {callback_url}")
+        
+        # Use library to construct the request for Google login
+        request_uri = client.prepare_request_uri(
+            authorization_endpoint,
+            redirect_uri=callback_url,
+            scope=["openid", "email", "profile"],
+        )
+        return redirect(request_uri)
+    except Exception as e:
+        app.logger.error(f"Error in login route: {str(e)}")
+        flash("Unable to initiate login process", "error")
+        return redirect(url_for('index'))
 
 @app.route('/login/callback')
 def callback():
