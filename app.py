@@ -406,7 +406,7 @@ def callback():
                         email=users_email,
                         name=users_name,
                         profile_pic=picture,
-                        credits=10
+                        credits=5
                     )
                     db.session.add(user)
                     db.session.commit()
@@ -482,7 +482,7 @@ def generate():
 @login_required
 def add_credits():
     # In a real application, verify ad was watched
-    current_user.credits += 10
+    current_user.credits += 3
     db.session.commit()
     return jsonify({'credits': current_user.credits})
 
