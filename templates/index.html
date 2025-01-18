@@ -86,7 +86,7 @@
 
                 <!-- AI Models Section -->
                 <div class="text-center mb-16 px-4 sm:px-6">
-                    <h2 class="text-2xl sm:text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                         مدل‌های هوش مصنوعی
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -151,46 +151,41 @@
                                              alt="{{ model.name }}" 
                                              class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
                                     </div>
-                                    <h3 class="text-xl font-bold text-white">{{ model.name }}</h3>
-                                    <p class="text-gray-300 text-sm mt-2">{{ model.description }}</p>
-                                    <div class="flex flex-wrap gap-2 justify-center mt-4">
+                                    <h3 class="text-xl font-bold text-white text-center">{{ model.name }}</h3>
+                                    <p class="text-gray-300 text-sm mt-2 text-center px-2">{{ model.description }}</p>
+                                    <div class="flex flex-wrap gap-2 justify-center mt-4 px-2">
                                         {% for feature in model.features %}
                                             <span class="feature-tag px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs
-                                                       hover:bg-purple-500/40 transition-colors duration-300">
+                                                       hover:bg-purple-500/40 transition-colors duration-300 backdrop-blur">
                                                 {{ feature }}
                                             </span>
                                         {% endfor %}
                                     </div>
                                     <!-- Interactive Stats -->
-                                    <div class="stats-container mt-4 grid grid-cols-2 gap-4 w-full">
-                                        <div class="stat-item text-center">
+                                    <div class="stats-container mt-4 grid grid-cols-2 gap-4 w-full px-2">
+                                        <div class="stat-item text-center bg-black/30 rounded-lg p-2">
                                             <div class="circular-progress" data-value="{{ model.quality_score }}">
                                                 <svg class="progress-ring" width="60" height="60">
                                                     <circle class="progress-ring__circle" stroke="currentColor" stroke-width="4" fill="transparent" r="26" cx="30" cy="30"/>
                                                 </svg>
-                                                <span class="stat-value text-sm">{{ model.quality_score }}%</span>
+                                                <span class="stat-value text-sm text-white">{{ model.quality_score }}%</span>
                                             </div>
-                                            <span class="text-xs text-gray-400">کیفیت</span>
+                                            <span class="text-xs text-gray-300">کیفیت</span>
                                         </div>
-                                        <div class="stat-item text-center">
+                                        <div class="stat-item text-center bg-black/30 rounded-lg p-2">
                                             <div class="processing-time">
                                                 <span class="text-xl text-purple-400">{{ model.processing_time }}</span>
-                                                <span class="text-xs text-gray-400">ثانیه</span>
+                                                <span class="text-xs text-gray-300">ثانیه</span>
                                             </div>
-                                            <span class="text-xs text-gray-400">زمان پردازش</span>
+                                            <span class="text-xs text-gray-300">زمان پردازش</span>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Tap indicator for mobile -->
-                                <div class="tap-indicator absolute bottom-2 right-2 md:hidden">
-                                    <span class="text-xs text-gray-400">برای جزئیات بیشتر ضربه بزنید</span>
-                                </div>
-            </div>
-        </div>
+                            </div>
+                        </div>
                         {% endfor %}
-            </div>
-        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -335,37 +330,149 @@
 /* Enhanced Mobile Responsiveness */
 @media (max-width: 640px) {
     h1 {
-        @apply text-5xl;
+        @apply text-4xl;
+    }
+
+    h2 {
+        @apply text-2xl;
     }
     
-    h2 {
-        @apply text-2xl mb-6;
+    .text-2xl {
+        @apply text-lg;
     }
     
     .cyber-button {
-        @apply px-6 py-3 text-base w-full;
+        @apply px-4 py-2 text-sm;
     }
     
-    .neural-button {
-        @apply px-4 py-3;
+    .neural-button, .plasma-button {
+        @apply px-3 py-2 text-sm;
     }
     
     .feature-card {
         @apply transform-none;
     }
 
+    .feature-card .text-4xl {
+        @apply text-2xl;
+    }
+
+    .feature-card h3 {
+        @apply text-base;
+    }
+
+    .feature-card p {
+        @apply text-sm;
+    }
+
     .model-card {
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .model-card .h-48 {
+        @apply h-32;
+    }
+    
+    .stats-container {
+        @apply mt-2 gap-2;
+    }
+    
+    .feature-tag {
+        @apply text-xs py-0.5 px-2;
+    }
+    
+    h3.text-xl {
+        @apply text-base mb-1;
+    }
+    
+    p.text-sm {
+        @apply text-xs leading-relaxed;
+    }
+    
+    .circular-progress {
+        @apply scale-75;
+    }
+
+    .circular-progress svg {
+        @apply w-12 h-12;
+    }
+    
+    .processing-time {
+        @apply text-sm;
+    }
+
+    .processing-time .text-xl {
+        @apply text-base;
+    }
+
+    .stat-item {
+        @apply p-1;
+    }
+
+    .grid {
+        @apply gap-3;
+    }
+
+    .mb-16 {
+        @apply mb-8;
+    }
+
+    .mb-12 {
         @apply mb-6;
+    }
+
+    .mb-8 {
+        @apply mb-4;
+    }
+
+    .mb-6 {
+        @apply mb-3;
+    }
+
+    .mb-4 {
+        @apply mb-2;
+    }
+
+    .p-8 {
+        @apply p-4;
+    }
+
+    .p-6 {
+        @apply p-3;
+    }
+
+    .p-4 {
+        @apply p-2;
+    }
+
+    .py-16 {
+        @apply py-8;
+    }
+
+    .px-8 {
+        @apply px-4;
+    }
+
+    .gap-8 {
+        @apply gap-4;
+    }
+
+    .gap-4 {
+        @apply gap-2;
     }
 }
 
 @media (max-width: 768px) {
     .grid {
-        @apply gap-4;
+        @apply gap-3;
     }
     
     .max-w-6xl {
-        @apply px-4;
+        @apply px-3;
+    }
+
+    .py-16 {
+        @apply py-8;
     }
 }
 
@@ -393,6 +500,8 @@
     perspective: 1000px;
     opacity: 0;
     animation: cardAppear 0.5s ease-out forwards;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 .model-card:hover .model-front {
@@ -532,6 +641,62 @@
     .google-login-btn {
         @apply w-full justify-center;
     }
+}
+
+/* Update existing styles */
+.model-card {
+    perspective: 1000px;
+    opacity: 0;
+    animation: cardAppear 0.5s ease-out forwards;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+@media (max-width: 640px) {
+    .model-card {
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .stats-container {
+        @apply mt-2;
+    }
+    
+    .feature-tag {
+        @apply text-xs py-1 px-2;
+    }
+    
+    h3.text-xl {
+        @apply text-lg mb-1;
+    }
+    
+    p.text-sm {
+        @apply text-xs leading-relaxed;
+    }
+    
+    .circular-progress {
+        @apply scale-90;
+    }
+    
+    .processing-time {
+        @apply text-sm;
+    }
+}
+
+/* Add contrast for better text visibility */
+.text-gray-300 {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.text-purple-300 {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.feature-tag {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.stat-item {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 </style>
 
