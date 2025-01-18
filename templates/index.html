@@ -43,10 +43,6 @@
                                     <span>ورود با گوگل</span>
                                 </div>
                             </a>
-                            <a href="{{ url_for('test_login') }}" 
-                               class="plasma-button w-full max-w-md">
-                                <span>ورود تست رایگان</span>
-                            </a>
                         </div>
                     {% endif %}
                 </div>
@@ -97,16 +93,103 @@
                 </div>
 
                 <!-- AI Models Section -->
-                <div class="text-center mb-16">
+                <div class="text-center mb-16 px-4 sm:px-6">
                     <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                         مدل‌های هوش مصنوعی
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {% for model in ['واقع‌گرایانه', 'انیمه', 'نقاشی'] %}
-                        <div class="rounded-xl overflow-hidden group hover:scale-105 transition-transform duration-300">
-                            <div class="aspect-video bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm 
-                                        flex items-center justify-center">
-                                <span class="text-xl text-white">{{ model }}</span>
+                        {% for model in [
+                            {
+                                'name': 'واقع‌گرایانه',
+                                'icon': '🎨',
+                                'description': 'تولید تصاویر با کیفیت عکاسی و جزئیات واقعی',
+                                'features': ['کیفیت بالا', 'جزئیات دقیق', 'نور طبیعی'],
+                                'processing_time': '5-10',
+                                'quality_score': '98'
+                            },
+                            {
+                                'name': 'انیمه',
+                                'icon': '✨',
+                                'description': 'تصاویر با سبک انیمه و مانگای ژاپنی',
+                                'features': ['رنگ‌های زنده', 'طراحی انیمه', 'سبک کارتونی'],
+                                'processing_time': '3-5',
+                                'quality_score': '95'
+                            },
+                            {
+                                'name': 'نقاشی',
+                                'icon': '🖌️',
+                                'description': 'تصاویر با سبک نقاشی دیجیتال و هنری',
+                                'features': ['افکت‌های هنری', 'سبک‌های متنوع', 'رنگ‌آمیزی خلاقانه'],
+                                'processing_time': '7-10',
+                                'quality_score': '90'
+                            },
+                            {
+                                'name': 'پیکسل آرت',
+                                'icon': '👾',
+                                'description': 'تصاویر با سبک پیکسلی و رترو',
+                                'features': ['سبک رترو', 'پیکسل‌های دقیق', 'رنگ‌های محدود'],
+                                'processing_time': '2-5',
+                                'quality_score': '85'
+                            },
+                            {
+                                'name': 'مینیمال',
+                                'icon': '⚪',
+                                'description': 'طراحی‌های ساده و مینیمالیستی',
+                                'features': ['طراحی ساده', 'خطوط تمیز', 'فضای منفی'],
+                                'processing_time': '1-3',
+                                'quality_score': '80'
+                            },
+                            {
+                                'name': '3D رندر',
+                                'icon': '🎮',
+                                'description': 'تصاویر سه بعدی با کیفیت رندر',
+                                'features': ['افکت‌های 3D', 'سایه‌پردازی', 'بافت‌های واقعی'],
+                                'processing_time': '8-12',
+                                'quality_score': '92'
+                            }
+                        ] %}
+                        <div class="model-card rounded-xl overflow-hidden group hover:scale-105 transition-transform duration-300"
+                             onclick="showModelDetails(this)">
+                            <div class="h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm p-6
+                                        flex flex-col items-center justify-center gap-4 border border-purple-500/30 relative">
+                                <!-- Front side -->
+                                <div class="model-front flex flex-col items-center transform transition-transform duration-500">
+                                    <span class="text-4xl model-icon animate-float">{{ model.icon }}</span>
+                                    <h3 class="text-xl font-bold text-white mt-4">{{ model.name }}</h3>
+                                    <p class="text-gray-300 text-sm mt-2">{{ model.description }}</p>
+                                    <div class="flex flex-wrap gap-2 justify-center mt-4">
+                                        {% for feature in model.features %}
+                                            <span class="feature-tag px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs
+                                                       hover:bg-purple-500/40 transition-colors duration-300">
+                                                {{ feature }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                    <!-- Interactive Stats -->
+                                    <div class="stats-container mt-4 grid grid-cols-2 gap-4 w-full">
+                                        <div class="stat-item text-center">
+                                            <div class="circular-progress" data-value="{{ model.quality_score }}">
+                                                <svg class="progress-ring" width="60" height="60">
+                                                    <circle class="progress-ring__circle" stroke="currentColor" stroke-width="4" fill="transparent" r="26" cx="30" cy="30"/>
+                                                </svg>
+                                                <span class="stat-value text-sm">{{ model.quality_score }}%</span>
+                                            </div>
+                                            <span class="text-xs text-gray-400">کیفیت</span>
+                                        </div>
+                                        <div class="stat-item text-center">
+                                            <div class="processing-time">
+                                                <span class="text-xl text-purple-400">{{ model.processing_time }}</span>
+                                                <span class="text-xs text-gray-400">ثانیه</span>
+                                            </div>
+                                            <span class="text-xs text-gray-400">زمان پردازش</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tap indicator for mobile -->
+                                <div class="tap-indicator absolute bottom-2 right-2 md:hidden">
+                                    <span class="text-xs text-gray-400">برای جزئیات بیشتر ضربه بزنید</span>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -252,6 +335,147 @@
 .feature-icon-container {
     @apply relative flex items-center justify-center mb-6;
 }
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 640px) {
+    h1 {
+        @apply text-5xl;
+    }
+    
+    .cyber-button {
+        @apply px-6 py-3 text-base w-full;
+    }
+    
+    .neural-button {
+        @apply px-4 py-3;
+    }
+    
+    .feature-card {
+        @apply transform-none;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid {
+        @apply gap-4;
+    }
+    
+    .max-w-6xl {
+        @apply px-4;
+    }
+}
+
+/* Improved Card Responsiveness */
+.feature-card {
+    @apply transition-all duration-300;
+}
+
+.feature-card:hover {
+    @apply md:scale-105;
+}
+
+/* Enhanced Text Readability on Mobile */
+.text-gray-300 {
+    @apply leading-relaxed;
+}
+
+/* Better Button Touch Areas on Mobile */
+.neural-button, .plasma-button, .cyber-button {
+    @apply touch-manipulation;
+}
+
+/* Model Card Animations */
+.model-card {
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.model-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.feature-tag {
+    animation: tagAppear 0.5s ease-out backwards;
+}
+
+@keyframes tagAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Circular Progress Animation */
+.circular-progress {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.5s ease;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    stroke: theme('colors.purple.400');
+}
+
+/* Mobile-specific animations */
+@media (max-width: 768px) {
+    .tap-indicator {
+        animation: tapPulse 2s ease-in-out infinite;
+    }
+    
+    .model-card {
+        animation: cardSlideIn 0.5s ease-out backwards;
+    }
+    
+    .model-card:active {
+        transform: scale(0.98);
+    }
+    
+    .feature-tag:active {
+        transform: scale(0.95);
+    }
+}
+
+@keyframes tapPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add stagger effect to cards */
+.model-card:nth-child(1) { animation-delay: 0.1s; }
+.model-card:nth-child(2) { animation-delay: 0.2s; }
+.model-card:nth-child(3) { animation-delay: 0.3s; }
+.model-card:nth-child(4) { animation-delay: 0.4s; }
+.model-card:nth-child(5) { animation-delay: 0.5s; }
+.model-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Add stagger effect to feature tags */
+.feature-tag:nth-child(1) { animation-delay: 0.1s; }
+.feature-tag:nth-child(2) { animation-delay: 0.2s; }
+.feature-tag:nth-child(3) { animation-delay: 0.3s; }
 </style>
 
 <!-- Scripts -->
@@ -300,6 +524,36 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounter();
     });
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize circular progress bars
+    document.querySelectorAll('.circular-progress').forEach(progress => {
+        const circle = progress.querySelector('.progress-ring__circle');
+        const value = progress.dataset.value;
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+        
+        const offset = circumference - (value / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+    });
+});
+
+function showModelDetails(card) {
+    // Add touch ripple effect
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    card.appendChild(ripple);
+    
+    // Animate ripple
+    ripple.style.animation = 'ripple 0.6s linear';
+    ripple.addEventListener('animationend', () => ripple.remove());
+    
+    // Toggle card info (you can add more interactive features here)
+    card.classList.toggle('show-details');
+}
 </script>
 
 <!-- Include Particle.js -->
