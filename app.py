@@ -498,9 +498,9 @@ def download_image(image_id):
         # Send the file with a proper filename
         return send_file(
             image_data,
-            mimetype='image/png',
+            mimetype='image/jpeg',
             as_attachment=True,
-            download_name=f'generated-image-{image_id}.png'
+            download_name=f'generated-image-{image_id}.jpeg'
         )
     except Exception as e:
         app.logger.error(f"Error downloading image: {str(e)}")
