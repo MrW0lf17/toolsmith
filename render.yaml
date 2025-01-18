@@ -6,11 +6,13 @@ services:
     startCommand: python -c "from app import app, db; app.app_context().push(); db.create_all()" && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
+        value: 3.11.0
       - key: SECRET_KEY
         generateValue: true
       - key: FLASK_ENV
         value: production
+      - key: FLASK_DEBUG
+        value: "0"
       - key: DATABASE_URL
         fromDatabase:
           name: toolsmith-db
@@ -25,4 +27,5 @@ services:
 databases:
   - name: toolsmith-db
     databaseName: toolsmith
+    user: toolsmith
     plan: free 

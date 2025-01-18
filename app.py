@@ -34,6 +34,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
+    'connect_args': {
+        'connect_timeout': 10
+    }
 }
 
 # Configure logging
@@ -305,24 +308,23 @@ def login():
 
 @app.route('/login/callback')
 def callback():
-    # Get authorization code Google sent back
-    code = request.args.get("code")
-    if not code:
-        app.logger.error("Authorization code not received")
-        return "Authorization code not received", 400
-    
-    # Find out what URL to hit to get tokens
-    google_provider_cfg = get_google_provider_cfg()
-    if not google_provider_cfg:
-        app.logger.error("Error loading Google configuration")
-        return "Error loading Google configuration", 500
-    
-    token_endpoint = google_provider_cfg["token_endpoint"]
-    
-    # Use the base URL function to dynamically determine the callback URL
-    callback_url = urljoin(get_base_url(), "/login/callback")
-    
     try:
+        # Get authorization code Google sent back
+        code = request.args.get("code")
+        if not code:
+            app.logger.error("Authorization code not received")
+            flash("Login failed: No authorization code received", "error")
+            return redirect(url_for('index'))
+        
+        google_provider_cfg = get_google_provider_cfg()
+        if not google_provider_cfg:
+            app.logger.error("Error loading Google configuration")
+            flash("Login failed: Could not load Google configuration", "error")
+            return redirect(url_for('index'))
+        
+        token_endpoint = google_provider_cfg["token_endpoint"]
+        callback_url = urljoin(get_base_url(), "/login/callback")
+        
         # Prepare and send request to get tokens
         token_url, headers, body = client.prepare_token_request(
             token_endpoint,
@@ -336,8 +338,9 @@ def callback():
             headers=headers,
             data=body,
             auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
+            timeout=10
         )
-        token_response.raise_for_status()  # Ensure the request was successful
+        token_response.raise_for_status()
 
         # Parse the tokens
         client.parse_request_body_response(json.dumps(token_response.json()))
@@ -345,38 +348,48 @@ def callback():
         # Get user info from Google
         userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
         uri, headers, body = client.add_token(userinfo_endpoint)
-        userinfo_response = requests.get(uri, headers=headers, data=body)
+        userinfo_response = requests.get(uri, headers=headers, data=body, timeout=10)
+        userinfo_response.raise_for_status()
         
         if userinfo_response.json().get("email_verified"):
-            unique_id = userinfo_response.json()["sub"]
             users_email = userinfo_response.json()["email"]
             users_name = userinfo_response.json()["name"]
             picture = userinfo_response.json()["picture"]
             
-            # Create or update user
-            user = User.query.filter_by(email=users_email).first()
-            if not user:
-                user = User(
-                    email=users_email,
-                    name=users_name,
-                    profile_pic=picture,
-                    credits=10
-                )
-                db.session.add(user)
-                db.session.commit()
-            
-            login_user(user)
-            return redirect(url_for('dashboard'))
+            try:
+                # Create or update user
+                user = User.query.filter_by(email=users_email).first()
+                if not user:
+                    user = User(
+                        email=users_email,
+                        name=users_name,
+                        profile_pic=picture,
+                        credits=10
+                    )
+                    db.session.add(user)
+                    db.session.commit()
+                
+                login_user(user)
+                return redirect(url_for('dashboard'))
+                
+            except Exception as db_error:
+                app.logger.error(f"Database error during user creation: {str(db_error)}")
+                db.session.rollback()
+                flash("Error creating user account", "error")
+                return redirect(url_for('index'))
         else:
-            app.logger.error("User email not verified by Google.")
-            return "User email not verified by Google.", 400
+            app.logger.error("User email not verified by Google")
+            flash("Login failed: Email not verified", "error")
+            return redirect(url_for('index'))
             
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Error in token exchange: {str(e)}")
-        return f"Error during authentication: {str(e)}", 500
+        flash("Login failed: Authentication error", "error")
+        return redirect(url_for('index'))
     except Exception as e:
         app.logger.error(f"Unexpected error in callback: {str(e)}")
-        return f"Error during authentication: {str(e)}", 500
+        flash("Login failed: Unexpected error", "error")
+        return redirect(url_for('index'))
 
 @app.route('/logout')
 @login_required
