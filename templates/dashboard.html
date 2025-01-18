@@ -2,9 +2,45 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4">
+    <!-- Top Banner Ad -->
+    <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="your-client-id"
+             data-ad-slot="your-banner-slot"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+    </div>
+
+    <!-- Left Sidebar Ad (on larger screens) -->
+    <div class="hidden lg:block fixed left-4 top-24 w-[160px]">
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:160px;height:600px"
+             data-ad-client="your-client-id"
+             data-ad-slot="your-vertical-slot"></ins>
+    </div>
+
+    <!-- Right Sidebar Ad (on larger screens) -->
+    <div class="hidden lg:block fixed right-4 top-24 w-[160px]">
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:160px;height:600px"
+             data-ad-client="your-client-id"
+             data-ad-slot="your-vertical-slot"></ins>
+    </div>
+
     <div class="persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
         <div class="flex items-center mb-4 sm:mb-6">
             <h2 class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تولید تصویر</h2>
+        </div>
+        
+        <!-- In-feed Ad -->
+        <div class="mb-6 overflow-hidden rounded-lg">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-fb+5w+4e-db+86"
+                 data-ad-client="your-client-id"
+                 data-ad-slot="your-infeed-slot"></ins>
         </div>
         
         <div class="mb-4 sm:mb-6">
@@ -42,6 +78,16 @@
         </div>
     </div>
 
+    <!-- Mid-page Banner Ad -->
+    <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="your-client-id"
+             data-ad-slot="your-banner-slot"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+    </div>
+
     <!-- Generated image display -->
     <div id="result" class="hidden persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
         <div class="flex items-center mb-3 sm:mb-4">
@@ -58,32 +104,42 @@
         </div>
     </div>
 
-    <!-- Ad modal -->
-    <div id="ad-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-4 sm:p-5 border w-11/12 sm:w-96 shadow-2xl rounded-xl persian-pattern border-purple-900">
-            <div class="mt-2 sm:mt-3 text-center">
-                <div class="flex items-center justify-center mb-3 sm:mb-4">
-                    <img src="https://img.icons8.com/color/48/video-playlist.png" alt="Video" class="ml-2 w-8 h-8 sm:w-12 sm:h-12">
-                    <h3 class="text-base sm:text-lg leading-6 font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تماشای تبلیغ</h3>
+    <!-- Bottom Banner Ad -->
+    <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="your-client-id"
+             data-ad-slot="your-banner-slot"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+    </div>
+</div>
+
+<!-- Ad modal -->
+<div id="ad-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-4 sm:p-5 border w-11/12 sm:w-96 shadow-2xl rounded-xl persian-pattern border-purple-900">
+        <div class="mt-2 sm:mt-3 text-center">
+            <div class="flex items-center justify-center mb-3 sm:mb-4">
+                <img src="https://img.icons8.com/color/48/video-playlist.png" alt="Video" class="ml-2 w-8 h-8 sm:w-12 sm:h-12">
+                <h3 class="text-base sm:text-lg leading-6 font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تماشای تبلیغ</h3>
+            </div>
+            <div class="mt-2 px-4 sm:px-7 py-2 sm:py-3">
+                <!-- Ad placeholder -->
+                <div class="bg-gray-800 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4 border border-purple-800">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="your-client-id"
+                         data-ad-slot="your-reward-slot"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
                 </div>
-                <div class="mt-2 px-4 sm:px-7 py-2 sm:py-3">
-                    <!-- Ad placeholder -->
-                    <div class="bg-gray-800 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4 border border-purple-800">
-                        <ins class="adsbygoogle"
-                             style="display:block"
-                             data-ad-client="your-client-id"
-                             data-ad-slot="your-ad-slot"
-                             data-ad-format="auto"
-                             data-full-width-responsive="true"></ins>
-                    </div>
-                    <p id="ad-timer" class="text-xs sm:text-sm text-gray-400">زمان باقی‌مانده: ۳۰ ثانیه</p>
-                </div>
-                <div class="items-center px-3 sm:px-4 py-2 sm:py-3">
-                    <button id="close-ad" disabled
-                            class="w-full px-3 sm:px-4 py-2 bg-gray-700 text-gray-300 text-sm sm:text-base font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300">
-                        لطفاً صبر کنید...
-                    </button>
-                </div>
+                <p id="ad-timer" class="text-xs sm:text-sm text-gray-400">زمان باقی‌مانده: ۳۰ ثانیه</p>
+            </div>
+            <div class="items-center px-3 sm:px-4 py-2 sm:py-3">
+                <button id="close-ad" disabled
+                        class="w-full px-3 sm:px-4 py-2 bg-gray-700 text-gray-300 text-sm sm:text-base font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300">
+                    لطفاً صبر کنید...
+                </button>
             </div>
         </div>
     </div>
@@ -200,7 +256,15 @@ function downloadImage() {
         });
 }
 
-// Initialize ads
-(adsbygoogle = window.adsbygoogle || []).push({});
+// Initialize all ads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all AdSense ads
+    (adsbygoogle = window.adsbygoogle || []).push({});
+    
+    // Initialize each ad unit separately
+    document.querySelectorAll('.adsbygoogle').forEach(function(ad) {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    });
+});
 </script>
 {% endblock %} 
