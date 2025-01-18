@@ -97,7 +97,7 @@
                     <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                         مدل‌های هوش مصنوعی
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {% for model in [
                             {
                                 'name': 'واقع‌گرایانه',
@@ -150,12 +150,16 @@
                         ] %}
                         <div class="model-card rounded-xl overflow-hidden group hover:scale-105 transition-transform duration-300"
                              onclick="showModelDetails(this)">
-                            <div class="h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm p-6
-                                        flex flex-col items-center justify-center gap-4 border border-purple-500/30 relative">
+                            <div class="h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm p-4
+                                        flex flex-col items-stretch border border-purple-500/30 relative">
                                 <!-- Front side -->
                                 <div class="model-front flex flex-col items-center transform transition-transform duration-500">
-                                    <img src="{{ model.icon }}" alt="{{ model.name }}" class="w-16 h-16 model-icon animate-float">
-                                    <h3 class="text-xl font-bold text-white mt-4">{{ model.name }}</h3>
+                                    <div class="w-full h-48 mb-4 overflow-hidden rounded-lg">
+                                        <img src="{{ model.icon }}" 
+                                             alt="{{ model.name }}" 
+                                             class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white">{{ model.name }}</h3>
                                     <p class="text-gray-300 text-sm mt-2">{{ model.description }}</p>
                                     <div class="flex flex-wrap gap-2 justify-center mt-4">
                                         {% for feature in model.features %}
@@ -387,20 +391,29 @@
 /* Model Card Animations */
 .model-card {
     perspective: 1000px;
-    cursor: pointer;
+    opacity: 0;
+    animation: cardAppear 0.5s ease-out forwards;
 }
 
-.model-icon {
-    animation: float 3s ease-in-out infinite;
+.model-card:hover .model-front {
+    transform: translateY(-8px);
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+.model-card:hover img {
+    transform: scale(1.1);
+}
+
+.model-card img {
+    transition: transform 0.5s ease-in-out;
+}
+
+.model-front {
+    transition: transform 0.3s ease-in-out;
 }
 
 .feature-tag {
     animation: tagAppear 0.5s ease-out backwards;
+    backdrop-filter: blur(4px);
 }
 
 @keyframes tagAppear {
@@ -413,6 +426,29 @@
         transform: translateY(0);
     }
 }
+
+@keyframes cardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.model-card:nth-child(1) { animation-delay: 0.1s; }
+.model-card:nth-child(2) { animation-delay: 0.2s; }
+.model-card:nth-child(3) { animation-delay: 0.3s; }
+.model-card:nth-child(4) { animation-delay: 0.4s; }
+.model-card:nth-child(5) { animation-delay: 0.5s; }
+.model-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Add stagger effect to feature tags */
+.feature-tag:nth-child(1) { animation-delay: 0.1s; }
+.feature-tag:nth-child(2) { animation-delay: 0.2s; }
+.feature-tag:nth-child(3) { animation-delay: 0.3s; }
 
 /* Circular Progress Animation */
 .circular-progress {
@@ -463,19 +499,6 @@
         transform: translateY(0);
     }
 }
-
-/* Add stagger effect to cards */
-.model-card:nth-child(1) { animation-delay: 0.1s; }
-.model-card:nth-child(2) { animation-delay: 0.2s; }
-.model-card:nth-child(3) { animation-delay: 0.3s; }
-.model-card:nth-child(4) { animation-delay: 0.4s; }
-.model-card:nth-child(5) { animation-delay: 0.5s; }
-.model-card:nth-child(6) { animation-delay: 0.6s; }
-
-/* Add stagger effect to feature tags */
-.feature-tag:nth-child(1) { animation-delay: 0.1s; }
-.feature-tag:nth-child(2) { animation-delay: 0.2s; }
-.feature-tag:nth-child(3) { animation-delay: 0.3s; }
 </style>
 
 <!-- Scripts -->
