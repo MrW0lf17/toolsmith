@@ -70,7 +70,10 @@ translations = {
         'Error: Image ID not found': 'Error: Image ID not found',
         'Network response was not ok': 'Network response was not ok',
         'Error downloading image. Please try again.': 'Error downloading image. Please try again.',
-        'There was an error!': 'There was an error!'
+        'There was an error!': 'There was an error!',
+        'Generated at': 'Generated at',
+        'You have not generated any images yet.': 'You have not generated any images yet.',
+        'Generate your first image': 'Generate your first image'
     },
     'fa': {
         'Dashboard': 'داشبورد',
@@ -143,7 +146,10 @@ translations = {
         'Error: Image ID not found': 'خطا: شناسه تصویر یافت نشد',
         'Network response was not ok': 'پاسخ شبکه مناسب نبود',
         'Error downloading image. Please try again.': 'خطا در دانلود تصویر. لطفاً دوباره تلاش کنید.',
-        'There was an error!': 'خطایی رخ داد!'
+        'There was an error!': 'خطایی رخ داد!',
+        'Generated at': 'تولید شده در',
+        'You have not generated any images yet.': 'شما هنوز تصویری تولید نکرده‌اید.',
+        'Generate your first image': 'تولید اولین تصویر'
     },
     'zh': {
         'Dashboard': '仪表板',
@@ -216,7 +222,10 @@ translations = {
         'Error: Image ID not found': '错误：图像ID未找到',
         'Network response was not ok': '网络响应不正确',
         'Error downloading image. Please try again.': '下载图像时出错。请再试一次。',
-        'There was an error!': '发生错误！'
+        'There was an error!': '发生错误！',
+        'Generated at': '生成于',
+        'You have not generated any images yet.': '您还没有生成任何图像。',
+        'Generate your first image': '生成您的第一张图像'
     },
     'it': {
         'Dashboard': 'Pannello di controllo',
@@ -226,7 +235,7 @@ translations = {
         'Login with Google': 'Accedi con Google',
         'All rights reserved': 'Tutti i diritti riservati',
         'Toolsmith AI': 'Toolsmith AI',
-        'Transform your ideas into stunning images with advanced AI': 'Trasforma le tue idee in immagini straordinarie con l\'AI avanzato',
+        'Transform your ideas into stunning images with advanced AI': 'Trasforma le tue idee in immagini straordinarie con l\'IA avanzato',
         'Start Image Generation': 'Inizia Generazione Immagini',
         'Features': 'Caratteristiche',
         'Various Models': 'Modelli Vari',
@@ -289,7 +298,10 @@ translations = {
         'Error: Image ID not found': 'Errore: ID immagine non trovato',
         'Network response was not ok': 'Risposta di rete non valida',
         'Error downloading image. Please try again.': 'Errore durante il download dell\'immagine. Riprova, per favore.',
-        'There was an error!': 'Si è verificato un errore!'
+        'There was an error!': 'Si è verificato un errore!',
+        'Generated at': 'Generato il',
+        'You have not generated any images yet.': 'Non hai ancora generato nessuna immagine.',
+        'Generate your first image': 'Genera la tua prima immagine'
     },
     'de': {
         'Dashboard': 'Dashboard',
@@ -362,7 +374,10 @@ translations = {
         'Error: Image ID not found': 'Fehler: Bild-ID nicht gefunden',
         'Network response was not ok': 'Netzwerkantwort war nicht ok',
         'Error downloading image. Please try again.': 'Bildherunterladen fehlgeschlagen. Bitte versuchen Sie es erneut.',
-        'There was an error!': 'Es ist ein Fehler aufgetreten!'
+        'There was an error!': 'Es ist ein Fehler aufgetreten!',
+        'Generated at': 'Generiert am',
+        'You have not generated any images yet.': 'Sie haben noch keine Bilder generiert.',
+        'Generate your first image': 'Generieren Sie Ihr erstes Bild'
     },
     'ja': {
         'Dashboard': 'ダッシュボード',
@@ -435,7 +450,10 @@ translations = {
         'Error: Image ID not found': 'エラー：画像IDが見つかりません',
         'Network response was not ok': 'ネットワーク応答が正しくありません',
         'Error downloading image. Please try again.': '画像ダウンロードエラー。もう一度お試しください。',
-        'There was an error!': 'エラーが発生しました！'
+        'There was an error!': 'エラーが発生しました！',
+        'Generated at': '生成日時',
+        'You have not generated any images yet.': 'まだ画像を生成していません。',
+        'Generate your first image': '最初の画像を生成'
     },
     'fr': {
         'Dashboard': 'Tableau de bord',
@@ -508,7 +526,10 @@ translations = {
         'Error: Image ID not found': 'Erreur : ID de l\'image non trouvé',
         'Network response was not ok': 'Réponse réseau non valide',
         'Error downloading image. Please try again.': 'Erreur de téléchargement de l\'image. Veuillez réessayer.',
-        'There was an error!': 'Il y a eu une erreur !'
+        'There was an error!': 'Il y a eu une erreur !',
+        'Generated at': 'Généré le',
+        'You have not generated any images yet.': 'Vous n\'avez pas encore généré d\'images.',
+        'Generate your first image': 'Générer votre première image'
     },
     'hi': {
         'Dashboard': 'डैशबोर्ड',
@@ -581,7 +602,10 @@ translations = {
         'Error: Image ID not found': 'त्रुटि: छवि ID नहीं मिला',
         'Network response was not ok': 'नेटवर्क प्रतिक्रिया सही नहीं थी',
         'Error downloading image. Please try again.': 'छवि डाउनलोड होने में त्रुटि। कृपया फिर से प्रयास करें।',
-        'There was an error!': 'एक त्रुटि हुई थी!'
+        'There was an error!': 'एक त्रुटि हुई थी!',
+        'Generated at': 'उत्पन्न किया गया',
+        'You have not generated any images yet.': 'आपने अभी तक कोई छवि नहीं बनाई है।',
+        'Generate your first image': 'अपनी पहली छवि बनाएं'
     },
     'ru': {
         'Dashboard': 'Панель управления',
@@ -654,7 +678,10 @@ translations = {
         'Error: Image ID not found': 'Ошибка: ID изображения не найден',
         'Network response was not ok': 'Сетевой ответ не был правильным',
         'Error downloading image. Please try again.': 'Ошибка при загрузке изображения. Пожалуйста, попробуйте еще раз.',
-        'There was an error!': 'Произошла ошибка!'
+        'There was an error!': 'Произошла ошибка!',
+        'Generated at': 'Сгенерировано',
+        'You have not generated any images yet.': 'Вы еще не сгенерировали ни одного изображения.',
+        'Generate your first image': 'Сгенерировать ваше первое изображение'
     },
     'tr': {
         'Dashboard': 'Kontrol Paneli',
@@ -672,7 +699,7 @@ translations = {
         'Smart Editing': 'Akıllı Düzenleme',
         'Edit images with advanced AI tools': 'Gelişmiş AI araçlarıyla görüntüleri düzenleyin',
         'Super Speed': 'Süper Hız',
-        'Generate high-quality images in the shortest possible time': 'En kısa sürede yüksek kaliteli görüntüler oluşturun',
+        'Generate high-quality images in the shortest possible time': 'En kısa sürede yüksək keyfiyyətli görseller oluşturun',
         'AI Models': 'Yapay Zeka Modelleri',
         'Realistic': 'Gerçekçi',
         'Anime': 'Anime',
@@ -712,7 +739,7 @@ translations = {
         'Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset': 'Oluşturmak istediğiniz görseli tanımlayın... Örnek: Gün batımında turkuaz kubbeli bir Fars sarayı',
         'Select Model': 'Model Seçin',
         'Generate Image (1 Credit)': 'Görsel Oluştur (1 Kredi)',
-        'Watch Ad for 3 Credits': '3 Kredi için Reklam İzle',
+        'Watch Ad for 3 Credits': '3 Kredit üçün Reklam İzle',
         'Generated Image': 'Oluşturulan Görsel',
         'Download': 'İndir',
         'Watch Ad': 'Reklam İzle',
@@ -727,7 +754,10 @@ translations = {
         'Error: Image ID not found': 'Hata: Görsel ID\'si bulunamadı',
         'Network response was not ok': 'Ağ yanıtı uygun değildi',
         'Error downloading image. Please try again.': 'Görsel indirme hatası. Lütfen tekrar deneyin.',
-        'There was an error!': 'Bir hata oluştu!'
+        'There was an error!': 'Bir hata oluştu!',
+        'Generated at': 'Oluşturulma tarihi',
+        'You have not generated any images yet.': 'Henüz hiç görsel oluşturmadınız.',
+        'Generate your first image': 'İlk görselinizi oluşturun'
     },
     'az': {
         'Dashboard': 'İdarə Paneli',
@@ -800,7 +830,10 @@ translations = {
         'Error: Image ID not found': 'Xəta: Şəkil ID tapılmadı',
         'Network response was not ok': 'Şəbəkə cavabı münasib deyildi',
         'Error downloading image. Please try again.': 'Şəkli yükləmə xətası. Zəhmət olmasa yenidən cəhd edin.',
-        'There was an error!': 'Xəta baş verdi!'
+        'There was an error!': 'Xəta baş verdi!',
+        'Generated at': 'Yaradılma tarixi',
+        'You have not generated any images yet.': 'Hələ heç bir şəkil yaratmamısınız.',
+        'Generate your first image': 'İlk şəklinizi yaradın'
     },
     'id': {
         'Dashboard': 'Dasbor',
@@ -873,6 +906,9 @@ translations = {
         'Error: Image ID not found': 'Kesalahan: ID gambar tidak ditemukan',
         'Network response was not ok': 'Respons jaringan tidak baik',
         'Error downloading image. Please try again.': 'Kesalahan mengunduh gambar. Silakan coba lagi.',
-        'There was an error!': 'Terjadi kesalahan!'
+        'There was an error!': 'Terjadi kesalahan!',
+        'Generated at': 'Dibuat pada',
+        'You have not generated any images yet.': 'Anda belum menghasilkan gambar apapun.',
+        'Generate your first image': 'Buat gambar pertama Anda'
     }
 } 

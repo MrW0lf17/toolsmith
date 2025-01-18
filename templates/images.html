@@ -2,19 +2,19 @@
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
-    <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تصاویر تولید شده</h2>
+    <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('My Images') }}</h2>
     
     {% if images %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for image in images %}
             <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden transform hover:scale-105 transition duration-300">
-                <img src="{{ url_for('serve_image', image_id=image.id) }}" alt="تصویر تولید شده" class="w-full h-64 object-cover">
+                <img src="{{ url_for('serve_image', image_id=image.id) }}" alt="{{ _('Generated Image') }}" class="w-full h-64 object-cover">
                 <div class="p-4">
                     <p class="text-gray-300 text-sm mb-2">{{ image.prompt }}</p>
-                    <p class="text-gray-500 text-xs mb-3">تولید شده در {{ image.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p class="text-gray-500 text-xs mb-3">{{ _('Generated at') }} {{ image.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
                     <button data-image-id="{{ image.id }}"
                        class="download-btn inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
-                        دانلود
+                        {{ _('Download') }}
                     </button>
                 </div>
             </div>
@@ -22,10 +22,10 @@
         </div>
     {% else %}
         <div class="text-center py-12 bg-gray-800 rounded-xl shadow-xl border border-gray-700">
-            <p class="text-gray-300 mb-4">شما هنوز تصویری تولید نکرده‌اید.</p>
+            <p class="text-gray-300 mb-4">{{ _('You have not generated any images yet.') }}</p>
             <a href="{{ url_for('dashboard') }}" 
                class="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
-                تولید اولین تصویر
+                {{ _('Generate your first image') }}
             </a>
         </div>
     {% endif %}
@@ -59,7 +59,7 @@
         fetch(`/download-image/${imageId}`)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error("{{ _('Network response was not ok') }}");
                 }
                 return response.blob();
             })
@@ -74,8 +74,8 @@
                 window.URL.revokeObjectURL(url);
             })
             .catch(error => {
-                alert('Error downloading image. Please try again.');
-                console.error('There was an error!', error);
+                alert("{{ _('Error downloading image. Please try again.') }}");
+                console.error("{{ _('There was an error!') }}", error);
             });
     }
 </script>
