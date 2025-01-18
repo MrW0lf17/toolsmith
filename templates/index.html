@@ -101,7 +101,7 @@
                         {% for model in [
                             {
                                 'name': 'واقع‌گرایانه',
-                                'icon': '🎨',
+                                'icon': 'https://i.ibb.co/WzcWdHD/realistic.jpg',
                                 'description': 'تولید تصاویر با کیفیت عکاسی و جزئیات واقعی',
                                 'features': ['کیفیت بالا', 'جزئیات دقیق', 'نور طبیعی'],
                                 'processing_time': '5-10',
@@ -109,7 +109,7 @@
                             },
                             {
                                 'name': 'انیمه',
-                                'icon': '✨',
+                                'icon': 'https://i.ibb.co/5574DYD/anime.jpg',
                                 'description': 'تصاویر با سبک انیمه و مانگای ژاپنی',
                                 'features': ['رنگ‌های زنده', 'طراحی انیمه', 'سبک کارتونی'],
                                 'processing_time': '3-5',
@@ -117,7 +117,7 @@
                             },
                             {
                                 'name': 'نقاشی',
-                                'icon': '🖌️',
+                                'icon': 'https://i.ibb.co/CVkRHff/painting.jpg',
                                 'description': 'تصاویر با سبک نقاشی دیجیتال و هنری',
                                 'features': ['افکت‌های هنری', 'سبک‌های متنوع', 'رنگ‌آمیزی خلاقانه'],
                                 'processing_time': '7-10',
@@ -125,7 +125,7 @@
                             },
                             {
                                 'name': 'پیکسل آرت',
-                                'icon': '👾',
+                                'icon': 'https://i.ibb.co/cxgdmMQ/pixel.jpg',
                                 'description': 'تصاویر با سبک پیکسلی و رترو',
                                 'features': ['سبک رترو', 'پیکسل‌های دقیق', 'رنگ‌های محدود'],
                                 'processing_time': '2-5',
@@ -133,7 +133,7 @@
                             },
                             {
                                 'name': 'مینیمال',
-                                'icon': '⚪',
+                                'icon': 'https://i.ibb.co/NSQjp18/minimal.jpg',
                                 'description': 'طراحی‌های ساده و مینیمالیستی',
                                 'features': ['طراحی ساده', 'خطوط تمیز', 'فضای منفی'],
                                 'processing_time': '1-3',
@@ -141,7 +141,7 @@
                             },
                             {
                                 'name': '3D رندر',
-                                'icon': '🎮',
+                                'icon': 'https://i.ibb.co/NNphZhq/3d.jpg',
                                 'description': 'تصاویر سه بعدی با کیفیت رندر',
                                 'features': ['افکت‌های 3D', 'سایه‌پردازی', 'بافت‌های واقعی'],
                                 'processing_time': '8-12',
@@ -154,7 +154,7 @@
                                         flex flex-col items-center justify-center gap-4 border border-purple-500/30 relative">
                                 <!-- Front side -->
                                 <div class="model-front flex flex-col items-center transform transition-transform duration-500">
-                                    <span class="text-4xl model-icon animate-float">{{ model.icon }}</span>
+                                    <img src="{{ model.icon }}" alt="{{ model.name }}" class="w-16 h-16 model-icon animate-float">
                                     <h3 class="text-xl font-bold text-white mt-4">{{ model.name }}</h3>
                                     <p class="text-gray-300 text-sm mt-2">{{ model.description }}</p>
                                     <div class="flex flex-wrap gap-2 justify-center mt-4">
