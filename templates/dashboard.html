@@ -9,23 +9,24 @@
         </div>
         
         <div class="mb-6">
-            <label for="model-select" class="block text-gray-300 text-sm font-bold mb-2">انتخاب مدل</label>
-            <select id="model-select" 
-                    class="w-full bg-gray-800 border border-purple-900 rounded-lg py-3 px-4 text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
-                <option value="realistic">واقع‌گرایانه</option>
-                <option value="anime">انیمه</option>
-                <option value="painting">نقاشی</option>
-                <option value="pixel-art">پیکسل آرت</option>
-                <option value="minimal">مینیمال</option>
-                <option value="3d-render">3D رندر</option>
-            </select>
-        </div>
-
-        <div class="mb-6">
             <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">توضیحات تصویر مورد نظر خود را وارد کنید</label>
             <textarea id="prompt" rows="3"
                       class="w-full bg-gray-800 border border-purple-900 rounded-lg py-3 px-4 text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 placeholder-gray-500"
                       placeholder="تصویری که می‌خواهید تولید کنید را توصیف کنید... مثال: یک قصر ایرانی با گنبد فیروزه‌ای در غروب آفتاب"></textarea>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="mb-6">
+            <label for="model" class="block text-gray-300 text-sm font-bold mb-2">انتخاب مدل</label>
+            <select id="model" 
+                    class="w-full bg-gray-800 border border-purple-900 rounded-lg py-3 px-4 text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                <option value="realistic">واقع‌گرایانه</option>
+                <option value="anime">انیمه</option>
+                <option value="painting">نقاشی</option>
+                <option value="pixel">پیکسل آرت</option>
+                <option value="minimal">مینیمال</option>
+                <option value="3d">3D رندر</option>
+            </select>
         </div>
         
         <div class="flex items-center justify-between">
@@ -92,8 +93,7 @@
 <script>
 function generateImage() {
     const prompt = document.getElementById('prompt').value;
-    const model = document.getElementById('model-select').value;
-    
+    const model = document.getElementById('model').value;
     if (!prompt) {
         alert('لطفاً توضیحات تصویر را وارد کنید');
         return;
@@ -103,24 +103,12 @@ function generateImage() {
     generateBtn.disabled = true;
     generateBtn.innerHTML = '<img src="https://img.icons8.com/color/24/loading.gif" alt="Loading" class="ml-2">در حال تولید...';
 
-    // Create model-specific prompts
-    const modelPrompts = {
-        'realistic': ', photorealistic, highly detailed, 8k resolution, professional photography',
-        'anime': ', anime style, manga art, cel shaded, vibrant colors',
-        'painting': ', digital painting, artistic, painterly style, expressive brushstrokes',
-        'pixel-art': ', pixel art style, retro gaming, 16-bit, pixelated',
-        'minimal': ', minimalist design, simple shapes, clean lines, minimal colors',
-        '3d-render': ', 3D render, octane render, realistic lighting, high detail textures'
-    };
-
-    const enhancedPrompt = prompt + modelPrompts[model];
-
     fetch('/generate', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `prompt=${encodeURIComponent(enhancedPrompt)}`
+        body: `prompt=${encodeURIComponent(prompt)}&model=${encodeURIComponent(model)}`
     })
     .then(response => response.json())
     .then(data => {

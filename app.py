@@ -10,9 +10,9 @@ from io import BytesIO
 import logging
 from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
+from functools import lru_cache
 import sys
 from urllib.parse import urljoin
-from translate import translate_to_english, translate_to_persian
 
 # Load environment variables
 load_dotenv()
@@ -37,14 +37,6 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
 }
-
-# API Configuration
-app.config['FLUX_API_KEY'] = os.environ.get('FLUX_API_KEY')
-if not app.config['FLUX_API_KEY']:
-    app.logger.error("API key not configured!")
-
-app.config['API_URL'] = "https://api.together.xyz/v1/images/generations"
-app.config['CHAT_API_URL'] = "https://api.together.xyz/v1/chat/completions"
 
 # Configure SSL based on environment
 if os.environ.get('FLASK_ENV') == 'production':
@@ -96,6 +88,14 @@ def init_oauth():
 
 # Call initialization after app creation
 init_oauth()
+
+# API Configuration
+API_KEY = os.environ.get('FLUX_API_KEY')
+if not API_KEY:
+    app.logger.error("API key not configured!")
+
+API_URL = "https://api.together.xyz/v1/images/generations"
+CHAT_API_URL = "https://api.together.xyz/v1/chat/completions"
 
 # Models
 class User(UserMixin, db.Model):
@@ -254,7 +254,7 @@ def generate_image(prompt: str) -> str:
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "authorization": f"Bearer {app.config['FLUX_API_KEY']}"
+        "authorization": f"Bearer {API_KEY}"
     }
     
     try:
@@ -262,8 +262,21 @@ def generate_image(prompt: str) -> str:
         english_prompt = translate_to_english(prompt)
         app.logger.info(f"Translated prompt: {english_prompt}")
         
-        # Enhanced prompt with better guidance
-        enhanced_prompt = f"professional high-quality detailed {english_prompt}, cinematic lighting, 8k uhd, highly detailed"
+        # Get model from request
+        model = request.form.get('model', 'realistic')
+        
+        # Model-specific prompt enhancements
+        model_prompts = {
+            'realistic': f"professional high-quality detailed photograph of {english_prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
+            'anime': f"high-quality anime illustration of {english_prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
+            'painting': f"artistic digital painting of {english_prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
+            'pixel': f"pixel art style {english_prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
+            'minimal': f"minimalist design of {english_prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
+            '3d': f"3D rendered scene of {english_prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
+        }
+        
+        # Enhanced prompt with model-specific guidance
+        enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
         
         data = {
             "model": "black-forest-labs/FLUX.1-schnell-Free",
@@ -275,7 +288,7 @@ def generate_image(prompt: str) -> str:
         }
         
         app.logger.info(f"Sending request to API with prompt: {enhanced_prompt}")
-        response = requests.post(app.config['API_URL'], json=data, headers=headers, timeout=30)
+        response = requests.post(API_URL, json=data, headers=headers, timeout=30)
         response.raise_for_status()
         
         result = response.json()

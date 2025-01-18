@@ -20,21 +20,21 @@
                              alt="Persian Palace" 
                              class="relative z-10 w-full h-full object-contain transform hover:scale-110 hover:rotate-3 transition-all duration-300"
                              loading="lazy">
-                    </div>
+        </div>
                     <h1 class="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
                         Toolsmith AI
                     </h1>
                     <p class="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
                         تبدیل ایده‌های شما به تصاویر خیره‌کننده با هوش مصنوعی پیشرفته
                     </p>
-                    
-                    {% if current_user.is_authenticated %}
+        
+        {% if current_user.is_authenticated %}
                         <a href="{{ url_for('dashboard') }}" 
                            class="cyber-button inline-flex items-center px-12 py-5 text-xl">
                             <span class="cyber-button__text">شروع تولید تصویر</span>
                             <span class="cyber-button__glitch"></span>
-                        </a>
-                    {% else %}
+            </a>
+        {% else %}
                         <div class="flex flex-col items-center gap-4">
                             <a href="{{ url_for('login') }}" 
                                class="neural-button w-full max-w-md">
@@ -42,10 +42,10 @@
                                     <img src="https://www.google.com/favicon.ico" alt="Google" class="w-6 h-6 ml-2">
                                     <span>ورود با گوگل</span>
                                 </div>
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
+                </a>
+            </div>
+        {% endif %}
+    </div>
 
                 <!-- Image Showcase Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
@@ -57,7 +57,7 @@
                 </div>
 
                 <!-- Features Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                     {% for feature in [
                         {
                             'icon': 'paint-palette',
@@ -190,11 +190,11 @@
                                 <div class="tap-indicator absolute bottom-2 right-2 md:hidden">
                                     <span class="text-xs text-gray-400">برای جزئیات بیشتر ضربه بزنید</span>
                                 </div>
-                            </div>
-                        </div>
+            </div>
+        </div>
                         {% endfor %}
-                    </div>
-                </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
@@ -554,7 +554,7 @@ function showModelDetails(card) {
     // Toggle card info (you can add more interactive features here)
     card.classList.toggle('show-details');
 }
-</script>
+        </script>
 
 <!-- Include Particle.js -->
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
