@@ -30,7 +30,7 @@
 
     <div class="persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
         <div class="flex items-center mb-4 sm:mb-6">
-            <h2 class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تولید تصویر</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Image Generation') }}</h2>
         </div>
         
         <!-- In-feed Ad -->
@@ -44,23 +44,23 @@
         </div>
         
         <div class="mb-4 sm:mb-6">
-            <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">توضیحات تصویر مورد نظر خود را وارد کنید</label>
+            <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Enter description of the image you want') }}</label>
             <textarea id="prompt" rows="3"
                       class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 placeholder-gray-500"
-                      placeholder="تصویری که می‌خواهید تولید کنید را توصیف کنید... مثال: یک قصر ایرانی با گنبد فیروزه‌ای در غروب آفتاب"></textarea>
+                      placeholder="{{ _('Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset') }}"></textarea>
         </div>
 
         <!-- Model Selection -->
         <div class="mb-4 sm:mb-6">
-            <label for="model" class="block text-gray-300 text-sm font-bold mb-2">انتخاب مدل</label>
+            <label for="model" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Select Model') }}</label>
             <select id="model" 
                     class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
-                <option value="realistic">واقع‌گرایانه</option>
-                <option value="anime">انیمه</option>
-                <option value="painting">نقاشی</option>
-                <option value="pixel">پیکسل آرت</option>
-                <option value="minimal">مینیمال</option>
-                <option value="3d">3D رندر</option>
+                <option value="realistic">{{ _('Realistic') }}</option>
+                <option value="anime">{{ _('Anime') }}</option>
+                <option value="painting">{{ _('Painting') }}</option>
+                <option value="pixel">{{ _('Pixel Art') }}</option>
+                <option value="minimal">{{ _('Minimal') }}</option>
+                <option value="3d">{{ _('3D Render') }}</option>
             </select>
         </div>
         
@@ -68,12 +68,12 @@
             <button id="generate-btn" onclick="generateImage()"
                     class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-purple-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
                 <img src="https://img.icons8.com/?size=100&id=AJVL9BlUfVWD&format=png&color=000000" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
-                تولید تصویر (۱ اعتبار)
+                {{ _('Generate Image (1 Credit)') }}
             </button>
             <button id="add-credits-btn" onclick="watchAd()"
                     class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
                 <img src="https://img.icons8.com/color/24/video-playlist.png" alt="Video" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
-                تماشای تبلیغ برای ۳ اعتبار
+                {{ _('Watch Ad for 3 Credits') }}
             </button>
         </div>
     </div>
@@ -92,14 +92,14 @@
     <div id="result" class="hidden persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
         <div class="flex items-center mb-3 sm:mb-4">
             <img src="https://img.icons8.com/?size=100&id=57212&format=png&color=000000" alt="Gallery" class="ml-2 sm:ml-4 w-8 h-8 sm:w-12 sm:h-12">
-            <h3 class="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تصویر تولید شده</h3>
+            <h3 class="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Generated Image') }}</h3>
         </div>
         <div class="relative">
-            <img id="generated-image" src="" alt="تصویر تولید شده" class="w-full rounded-lg shadow-2xl">
+            <img id="generated-image" src="" alt="{{ _('Generated Image') }}" class="w-full rounded-lg shadow-2xl">
             <button onclick="downloadImage()"
                     class="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
                 <img src="https://img.icons8.com/color/24/download--v1.png" alt="Download" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
-                دانلود
+                {{ _('Download') }}
             </button>
         </div>
     </div>
@@ -121,7 +121,7 @@
         <div class="mt-2 sm:mt-3 text-center">
             <div class="flex items-center justify-center mb-3 sm:mb-4">
                 <img src="https://img.icons8.com/color/48/video-playlist.png" alt="Video" class="ml-2 w-8 h-8 sm:w-12 sm:h-12">
-                <h3 class="text-base sm:text-lg leading-6 font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تماشای تبلیغ</h3>
+                <h3 class="text-base sm:text-lg leading-6 font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Watch Ad') }}</h3>
             </div>
             <div class="mt-2 px-4 sm:px-7 py-2 sm:py-3">
                 <!-- Ad placeholder -->
@@ -133,12 +133,12 @@
                          data-ad-format="auto"
                          data-full-width-responsive="true"></ins>
                 </div>
-                <p id="ad-timer" class="text-xs sm:text-sm text-gray-400">زمان باقی‌مانده: ۳۰ ثانیه</p>
+                <p id="ad-timer" class="text-xs sm:text-sm text-gray-400">{{ _('Time remaining: 30 seconds') }}</p>
             </div>
             <div class="items-center px-3 sm:px-4 py-2 sm:py-3">
                 <button id="close-ad" disabled
                         class="w-full px-3 sm:px-4 py-2 bg-gray-700 text-gray-300 text-sm sm:text-base font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300">
-                    لطفاً صبر کنید...
+                    {{ _('Please wait...') }}
                 </button>
             </div>
         </div>
@@ -150,13 +150,13 @@ function generateImage() {
     const prompt = document.getElementById('prompt').value;
     const model = document.getElementById('model').value;
     if (!prompt) {
-        alert('لطفاً توضیحات تصویر را وارد کنید');
+        alert("{{ _('Please enter image description') }}");
         return;
     }
 
     const generateBtn = document.getElementById('generate-btn');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<img src="https://img.icons8.com/?size=100&id=AJVL9BlUfVWD&format=png&color=000000" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">در حال تولید...';
+    generateBtn.innerHTML = '<img src="https://img.icons8.com/?size=100&id=AJVL9BlUfVWD&format=png&color=000000" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">' + "{{ _('Generating...') }}";
 
     fetch('/generate', {
         method: 'POST',
@@ -179,11 +179,11 @@ function generateImage() {
         document.getElementById('credits-count').textContent = data.credits_remaining;
     })
     .catch(error => {
-        alert('خطا در تولید تصویر: ' + error);
+        alert("{{ _('Error generating image: ') }}" + error);
     })
     .finally(() => {
         generateBtn.disabled = false;
-        generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">تولید تصویر (۱ اعتبار)';
+        generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">' + "{{ _('Generate Image (1 Credit)') }}";
     });
 }
 
@@ -196,11 +196,11 @@ function watchAd() {
     let timeLeft = 30;
     const countdown = setInterval(() => {
         timeLeft--;
-        timer.textContent = `زمان باقی‌مانده: ${timeLeft} ثانیه`;
+        timer.textContent = "{{ _('Time remaining:') }}" + ` ${timeLeft} ` + "{{ _('seconds') }}";
         
         if (timeLeft <= 0) {
             clearInterval(countdown);
-            closeBtn.textContent = 'بستن';
+            closeBtn.textContent = "{{ _('Close') }}";
             closeBtn.disabled = false;
             closeBtn.classList.remove('bg-gray-700');
             closeBtn.classList.add('bg-gradient-to-r', 'from-purple-500', 'to-indigo-500', 'text-white', 'hover:from-purple-600', 'hover:to-indigo-600');
@@ -229,14 +229,14 @@ function downloadImage() {
     const imageId = image.dataset.imageId;
     
     if (!imageId) {
-        alert('Error: Image ID not found');
+        alert("{{ _('Error: Image ID not found') }}");
         return;
     }
 
     fetch(`/download-image/${imageId}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error("{{ _('Network response was not ok') }}");
             }
             return response.blob();
         })
@@ -251,8 +251,8 @@ function downloadImage() {
             window.URL.revokeObjectURL(url);
         })
         .catch(error => {
-            alert('Error downloading image. Please try again.');
-            console.error('There was an error!', error);
+            alert("{{ _('Error downloading image. Please try again.') }}");
+            console.error("{{ _('There was an error!') }}", error);
         });
 }
 
