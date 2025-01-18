@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_file
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_file, Response, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from oauthlib.oauth2 import WebApplicationClient
@@ -489,22 +489,49 @@ def download_image(image_id):
     
     try:
         # Download the image from the URL
-        response = requests.get(image.image_url)
+        response = requests.get(image.image_url, timeout=10)
         response.raise_for_status()
         
         # Create a BytesIO object from the image data
         image_data = BytesIO(response.content)
         
-        # Send the file with a proper filename
+        # Send the file with disposition as attachment to force download
         return send_file(
             image_data,
             mimetype='image/jpeg',
             as_attachment=True,
-            download_name=f'generated-image-{image_id}.jpeg'
+            download_name=f'generated-image-{image.id}.jpeg'
         )
     except Exception as e:
         app.logger.error(f"Error downloading image: {str(e)}")
         return "Error downloading image", 500
+
+@app.route('/serve-image/<int:image_id>')
+@login_required
+def serve_image(image_id):
+    image = Image.query.get_or_404(image_id)
+    
+    # Verify the image belongs to the current user
+    if image.user_id != current_user.id:
+        return "Unauthorized", 403
+    
+    try:
+        # Download the image from the URL
+        response = requests.get(image.image_url, timeout=10)
+        response.raise_for_status()
+        
+        # Serve the image with caching headers
+        return Response(
+            response.content,
+            mimetype='image/jpeg',
+            headers={
+                'Content-Disposition': f'inline; filename=generated-image-{image.id}.jpeg',
+                'Cache-Control': 'public, max-age=3600'
+            }
+        )
+    except Exception as e:
+        app.logger.error(f"Error serving image: {str(e)}")
+        return "Error serving image", 500
 
 if __name__ == '__main__':
     with app.app_context():
