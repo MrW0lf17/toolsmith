@@ -148,6 +148,52 @@
             }
         });
     }
+
+    // Disable right click
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // Disable F12 key and other keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Prevent F12
+        if(e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Prevent Ctrl+Shift+I
+        if(e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Prevent Ctrl+Shift+J
+        if(e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Prevent Ctrl+U (View Source)
+        if(e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Additional protection against dev tools
+    setInterval(function() {
+        const devtools = /./;
+        devtools.toString = function() {
+            this.opened = true;
+        }
+        console.log('%c', devtools);
+        
+        if(window.devtools?.opened || window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160) {
+            document.body.innerHTML = 'Developer tools detected!';
+        }
+    }, 1000);
     </script>
 </body>
 </html> 
