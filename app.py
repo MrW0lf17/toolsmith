@@ -503,7 +503,7 @@ def download_image(image_id):
             download_name=f'generated-image-{image_id}.png'
         )
     except Exception as e:
-        print(f"Error downloading image: {str(e)}")
+        app.logger.error(f"Error downloading image: {str(e)}")
         return "Error downloading image", 500
 
 if __name__ == '__main__':
