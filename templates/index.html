@@ -15,16 +15,16 @@
             <div class="max-w-6xl mx-auto px-4">
                 <div class="text-center mb-16">
                     <h1 class="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
-                        Toolsmith AI
+                        {{ _('Toolsmith AI') }}
                     </h1>
                     <p class="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
-                        تبدیل ایده‌های شما به تصاویر خیره‌کننده با هوش مصنوعی پیشرفته
+                        {{ _('Transform your ideas into stunning images with advanced AI') }}
                     </p>
         
                     {% if current_user.is_authenticated %}
                         <a href="{{ url_for('dashboard') }}" 
                            class="cyber-button inline-flex items-center px-12 py-5 text-xl">
-                            <span class="cyber-button__text">شروع تولید تصویر</span>
+                            <span class="cyber-button__text">{{ _('Start Image Generation') }}</span>
                             <span class="cyber-button__glitch"></span>
                         </a>
                     {% else %}
@@ -32,7 +32,7 @@
                             <a href="{{ url_for('login') }}" 
                                class="google-login-btn flex items-center gap-3 px-8 py-4 bg-white hover:bg-gray-50 text-gray-800 rounded-xl font-medium transition-all duration-300 hover:shadow-xl hover:scale-105 group">
                                 <img src="https://www.google.com/favicon.ico" alt="Google" class="w-6 h-6 group-hover:scale-110 transition-transform duration-300">
-                                <span class="text-lg">ورود با گوگل</span>
+                                <span class="text-lg">{{ _('Login with Google') }}</span>
                                 <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </a>
                         </div>
@@ -53,18 +53,18 @@
                     {% for feature in [
                         {
                             'icon': 'paint-palette',
-                            'title': 'مدل‌های متنوع',
-                            'description': 'انتخاب از بین مدل‌های مختلف برای تولید تصاویر با سبک‌های متفاوت'
+                            'title': _('Various Models'),
+                            'description': _('Choose from different models to generate images with diverse styles')
                         },
                         {
                             'icon': 'magic-wand',
-                            'title': 'ویرایش هوشمند',
-                            'description': 'امکان ویرایش تصاویر با ابزارهای پیشرفته هوش مصنوعی'
+                            'title': _('Smart Editing'),
+                            'description': _('Edit images with advanced AI tools')
                         },
                         {
                             'icon': 'rocket',
-                            'title': 'سرعت فوق‌العاده',
-                            'description': 'تولید تصاویر با کیفیت در کمترین زمان ممکن'
+                            'title': _('Super Speed'),
+                            'description': _('Generate high-quality images in the shortest possible time')
                         }
                     ] %}
                     <div class="feature-card group">
@@ -87,55 +87,55 @@
                 <!-- AI Models Section -->
                 <div class="text-center mb-16 px-4 sm:px-6">
                     <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                        مدل‌های هوش مصنوعی
+                        {{ _('AI Models') }}
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {% for model in [
                             {
-                                'name': 'واقع‌گرایانه',
+                                'name': _('Realistic'),
                                 'icon': 'https://i.ibb.co/WzcWdHD/realistic.jpg',
-                                'description': 'تولید تصاویر با کیفیت عکاسی و جزئیات واقعی',
-                                'features': ['کیفیت بالا', 'جزئیات دقیق', 'نور طبیعی'],
+                                'description': _('Generate photorealistic images with real-world details'),
+                                'features': [_('High Quality'), _('Precise Details'), _('Natural Lighting')],
                                 'processing_time': '5-10',
                                 'quality_score': '98'
                             },
                             {
-                                'name': 'انیمه',
+                                'name': _('Anime'),
                                 'icon': 'https://i.ibb.co/5574DYD/anime.jpg',
-                                'description': 'تصاویر با سبک انیمه و مانگای ژاپنی',
-                                'features': ['رنگ‌های زنده', 'طراحی انیمه', 'سبک کارتونی'],
+                                'description': _('Create images in Japanese anime and manga style'),
+                                'features': [_('Vibrant Colors'), _('Anime Design'), _('Cartoon Style')],
                                 'processing_time': '3-5',
                                 'quality_score': '95'
                             },
                             {
-                                'name': 'نقاشی',
+                                'name': _('Painting'),
                                 'icon': 'https://i.ibb.co/CVkRHff/painting.jpg',
-                                'description': 'تصاویر با سبک نقاشی دیجیتال و هنری',
-                                'features': ['افکت‌های هنری', 'سبک‌های متنوع', 'رنگ‌آمیزی خلاقانه'],
+                                'description': _('Generate images in digital painting and artistic style'),
+                                'features': [_('Artistic Effects'), _('Various Styles'), _('Creative Coloring')],
                                 'processing_time': '7-10',
                                 'quality_score': '90'
                             },
                             {
-                                'name': 'پیکسل آرت',
+                                'name': _('Pixel Art'),
                                 'icon': 'https://i.ibb.co/cxgdmMQ/pixel.jpg',
-                                'description': 'تصاویر با سبک پیکسلی و رترو',
-                                'features': ['سبک رترو', 'پیکسل‌های دقیق', 'رنگ‌های محدود'],
+                                'description': _('Create images in pixel art and retro style'),
+                                'features': [_('Retro Style'), _('Precise Pixels'), _('Limited Colors')],
                                 'processing_time': '2-5',
                                 'quality_score': '85'
                             },
                             {
-                                'name': 'مینیمال',
+                                'name': _('Minimal'),
                                 'icon': 'https://i.ibb.co/NSQjp18/minimal.jpg',
-                                'description': 'طراحی‌های ساده و مینیمالیستی',
-                                'features': ['طراحی ساده', 'خطوط تمیز', 'فضای منفی'],
+                                'description': _('Create simple and minimalist designs'),
+                                'features': [_('Simple Design'), _('Clean Lines'), _('Negative Space')],
                                 'processing_time': '1-3',
                                 'quality_score': '80'
                             },
                             {
-                                'name': '3D رندر',
+                                'name': _('3D Render'),
                                 'icon': 'https://i.ibb.co/NNphZhq/3d.jpg',
-                                'description': 'تصاویر سه بعدی با کیفیت رندر',
-                                'features': ['افکت‌های 3D', 'سایه‌پردازی', 'بافت‌های واقعی'],
+                                'description': _('Generate 3D images with render quality'),
+                                'features': [_('3D Effects'), _('Shadows'), _('Real Textures')],
                                 'processing_time': '8-12',
                                 'quality_score': '92'
                             }
@@ -170,14 +170,14 @@
                                                 </svg>
                                                 <span class="stat-value text-sm text-white">{{ model.quality_score }}%</span>
                                             </div>
-                                            <span class="text-xs text-gray-300">کیفیت</span>
+                                            <span class="text-xs text-gray-300">{{ _('Quality') }}</span>
                                         </div>
                                         <div class="stat-item text-center bg-black/30 rounded-lg p-2">
                                             <div class="processing-time">
                                                 <span class="text-xl text-purple-400">{{ model.processing_time }}</span>
-                                                <span class="text-xs text-gray-300">ثانیه</span>
+                                                <span class="text-xs text-gray-300">{{ _('seconds') }}</span>
                                             </div>
-                                            <span class="text-xs text-gray-300">زمان پردازش</span>
+                                            <span class="text-xs text-gray-300">{{ _('Processing Time') }}</span>
                                         </div>
                                     </div>
                                 </div>
