@@ -26,17 +26,16 @@ if database_url:
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.logger.info(f"Database URL configured: {database_url.split('@')[1]}")  # Log only the non-sensitive part
 else:
-    app.logger.error("No DATABASE_URL found in environment")
-    sys.exit(1)
+    # For local development, use SQLite
+    app.logger.warning("No DATABASE_URL found, using SQLite for local development")
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
-    'connect_args': {
-        'connect_timeout': 10
-    }
 }
 
 # Configure logging
@@ -68,6 +67,7 @@ def get_base_url():
         return f"https://{request.host}"
     return request.base_url.rsplit('/', 1)[0]
 
+# Initialize SQLAlchemy after all configurations
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
