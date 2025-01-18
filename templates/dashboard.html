@@ -9,30 +9,16 @@
         </div>
         
         <div class="mb-6">
-            <label class="block text-gray-300 mb-2">انتخاب مدل</label>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {% for model in [
-                    ('واقع‌گرایانه', '🎨'),
-                    ('انیمه', '✨'),
-                    ('نقاشی', '🖌️'),
-                    ('پیکسل آرت', '👾'),
-                    ('مینیمال', '⚪'),
-                    ('3D رندر', '🎮')
-                ] %}
-                <label class="model-select-card cursor-pointer">
-                    <input type="radio" name="model" value="{{ model[0] }}" 
-                           class="hidden" {% if loop.first %}checked{% endif %}>
-                    <div class="h-full p-4 rounded-xl border border-purple-500/30 
-                                backdrop-blur-sm bg-black/40 hover:bg-purple-500/20 
-                                transition-all duration-300">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">{{ model[1] }}</span>
-                            <span class="text-gray-300">{{ model[0] }}</span>
-                        </div>
-                    </div>
-                </label>
-                {% endfor %}
-            </div>
+            <label for="model-select" class="block text-gray-300 text-sm font-bold mb-2">انتخاب مدل</label>
+            <select id="model-select" 
+                    class="w-full bg-gray-800 border border-purple-900 rounded-lg py-3 px-4 text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                <option value="realistic">واقع‌گرایانه</option>
+                <option value="anime">انیمه</option>
+                <option value="painting">نقاشی</option>
+                <option value="pixel">پیکسل آرت</option>
+                <option value="minimal">مینیمال</option>
+                <option value="3d">3D رندر</option>
+            </select>
         </div>
         
         <div class="mb-6">
@@ -104,46 +90,26 @@
 </div>
 
 <script>
-document.getElementById('generateForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const prompt = document.getElementById('prompt').value;
-    const selectedModel = document.querySelector('input[name="model"]:checked').value;
-    
-    // Show loading state
-    setLoading(true);
-    
-    try {
-        const response = await fetch('/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                prompt: prompt,
-                model: selectedModel
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            displayImage(data.image_url);
-        } else {
-            showError(data.error);
-        }
-    } catch (error) {
-        showError('خطا در تولید تصویر');
-    } finally {
-        setLoading(false);
-    }
-});
-
 function generateImage() {
     const prompt = document.getElementById('prompt').value;
+    const selectedModel = document.getElementById('model-select').value;
+    
     if (!prompt) {
         alert('لطفاً توضیحات تصویر را وارد کنید');
         return;
     }
+
+    // Add model-specific prompts
+    const modelPrompts = {
+        'realistic': 'professional high-quality photorealistic detailed image with natural lighting, 8k uhd, highly detailed',
+        'anime': 'high-quality anime style illustration, vibrant colors, manga-inspired artwork',
+        'painting': 'digital art painting with artistic effects, creative color palette',
+        'pixel': 'pixel art style, retro gaming aesthetic, limited color palette',
+        'minimal': 'minimalist design, clean lines, simple shapes, negative space',
+        '3d': '3D rendered image with realistic textures, professional lighting, and shadows'
+    };
+
+    const enhancedPrompt = `${prompt}, ${modelPrompts[selectedModel]}`;
 
     const generateBtn = document.getElementById('generate-btn');
     generateBtn.disabled = true;
@@ -154,7 +120,7 @@ function generateImage() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `prompt=${encodeURIComponent(prompt)}`
+        body: `prompt=${encodeURIComponent(enhancedPrompt)}`
     })
     .then(response => response.json())
     .then(data => {
