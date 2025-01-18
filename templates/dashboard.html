@@ -102,7 +102,9 @@ function generateImage() {
             return;
         }
         
-        document.getElementById('generated-image').src = data.image_url;
+        const generatedImage = document.getElementById('generated-image');
+        generatedImage.src = data.image_url;
+        generatedImage.dataset.imageId = data.image_id;
         document.getElementById('result').classList.remove('hidden');
         document.getElementById('credits-count').textContent = data.credits_remaining;
     })
@@ -154,7 +156,14 @@ function watchAd() {
 
 function downloadImage() {
     const image = document.getElementById('generated-image');
-    fetch('/download-image/' + image.src.split('/').pop())
+    const imageId = image.dataset.imageId;
+    
+    if (!imageId) {
+        alert('Error: Image ID not found');
+        return;
+    }
+
+    fetch(`/download-image/${imageId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -165,7 +174,7 @@ function downloadImage() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'toolsmith-ai-image.jpeg';
+            a.download = `generated-image-${imageId}.jpeg`;
             document.body.appendChild(a);
             a.click();
             a.remove();

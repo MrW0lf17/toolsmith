@@ -456,6 +456,7 @@ def generate():
         return jsonify({
             'success': True,
             'image_url': image_url,
+            'image_id': image.id,
             'credits_remaining': current_user.credits,
             'message': translate_to_persian("Image generated successfully")
         })
