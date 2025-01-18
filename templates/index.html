@@ -11,127 +11,107 @@
     <!-- Main Content -->
     <div class="relative z-10">
         <!-- Hero Section -->
-        <div class="relative">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-                <!-- Glowing AI Core -->
-                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pulse-glow"></div>
-                
-                <div class="backdrop-blur-sm bg-black/40 persian-pattern rounded-3xl shadow-2xl p-12 border border-purple-500/30 
-                            transform hover:scale-[1.02] transition-all duration-300 ai-card-glow">
-                    <!-- AI Brain Animation -->
+        <div class="relative py-16">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="text-center mb-16">
                     <div class="relative w-32 h-32 mx-auto mb-8">
                         <div class="absolute inset-0 brain-waves"></div>
                         <img src="https://img.icons8.com/color/96/persian-palace.png" 
                              alt="Persian Palace" 
-                             class="relative z-10 w-full h-full object-contain transform hover:scale-110 hover:rotate-3 transition-all duration-300 ai-hover-float"
+                             class="relative z-10 w-full h-full object-contain transform hover:scale-110 hover:rotate-3 transition-all duration-300"
                              loading="lazy">
                     </div>
-                    
-                    <!-- AI Text Effect -->
-                    <div class="glitch-container mb-6">
-                        <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center glitch-text"
-                            data-text="Toolsmith AI">
-                            Toolsmith AI
-                        </h1>
-                    </div>
-                    
-                    <p class="text-2xl text-gray-300 text-center font-light mb-8 typing-text">
-                        تبدیل ایده‌های شما به تصاویر خیره‌کننده با سریع‌ترین هوش مصنوعی
+                    <h1 class="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
+                        Toolsmith AI
+                    </h1>
+                    <p class="text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
+                        تبدیل ایده‌های شما به تصاویر خیره‌کننده با هوش مصنوعی پیشرفته
                     </p>
                     
-                    <!-- AI Stats -->
-                    <div class="flex justify-center gap-8 text-sm text-gray-400 mb-12">
-                        <div class="stat-card">
-                            <div class="flex items-center gap-2">
-                                <div class="processing-indicator">
-                                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                    </svg>
-                                </div>
-                                <span class="counter" data-target="5">0</span>
-                                <span>ثانیه زمان تولید</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="flex items-center gap-2">
-                                <div class="quality-indicator">
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                </div>
-                                <span class="counter" data-target="100">0</span>
-                                <span>% دقت</span>
-                            </div>
-                        </div>
-                    </div>
-                    
                     {% if current_user.is_authenticated %}
-                        <div class="text-center">
-                            <a href="{{ url_for('dashboard') }}" 
-                               class="cyber-button">
-                                <span class="cyber-button__glitch"></span>
-                                <span class="cyber-button__text">ورود به داشبورد</span>
-                            </a>
-                        </div>
+                        <a href="{{ url_for('dashboard') }}" 
+                           class="cyber-button inline-flex items-center px-12 py-5 text-xl">
+                            <span class="cyber-button__text">شروع تولید تصویر</span>
+                            <span class="cyber-button__glitch"></span>
+                        </a>
                     {% else %}
-                        <div class="flex flex-col space-y-4 max-w-md mx-auto">
+                        <div class="flex flex-col items-center gap-4">
                             <a href="{{ url_for('login') }}" 
-                               class="neural-button">
+                               class="neural-button w-full max-w-md">
                                 <div class="neural-button__content">
-                                    <img src="https://www.google.com/favicon.ico" alt="Google" class="w-6 h-6 ml-2" loading="lazy">
+                                    <img src="https://www.google.com/favicon.ico" alt="Google" class="w-6 h-6 ml-2">
                                     <span>ورود با گوگل</span>
                                 </div>
-                                <div class="neural-button__glitch"></div>
                             </a>
-                            
                             <a href="{{ url_for('test_login') }}" 
-                               class="plasma-button">
-                                <div class="plasma-button__content">
-                                    <span>ورود تست (بدون گوگل)</span>
-                                </div>
+                               class="plasma-button w-full max-w-md">
+                                <span>ورود تست رایگان</span>
                             </a>
                         </div>
                     {% endif %}
                 </div>
-            </div>
-        </div>
 
-        <!-- Features Grid with AI Animation -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {% for feature in [
-                    {
-                        'icon': 'https://img.icons8.com/color/48/paint-palette.png',
-                        'title': 'تولید سریع تصویر',
-                        'description': 'ایجاد تصاویر خیره‌کننده در کمتر از ۵ ثانیه با پیشرفته‌ترین مدل‌های هوش مصنوعی'
-                    },
-                    {
-                        'icon': 'https://img.icons8.com/color/48/gift--v1.png',
-                        'title': 'اعتبار رایگان',
-                        'description': 'شروع با ۱۰ اعتبار رایگان و امکان کسب اعتبار نامحدود'
-                    },
-                    {
-                        'icon': 'https://img.icons8.com/color/48/download--v1.png',
-                        'title': 'دانلود و اشتراک‌گذاری',
-                        'description': 'دانلود فوری تصاویر با کیفیت بالا و اشتراک‌گذاری آسان'
-                    }
-                ] %}
-                <div class="feature-card group" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                    <div class="h-full persian-pattern rounded-2xl shadow-xl border border-purple-500/30 p-8 
-                                backdrop-blur-sm bg-black/40 transform hover:scale-105 transition-all duration-300">
-                        <div class="feature-icon-container">
-                            <div class="feature-icon-glow"></div>
-                            <img src="{{ feature.icon }}" alt="{{ feature.title }}" 
-                                 class="w-16 h-16 mx-auto relative z-10" loading="lazy">
+                <!-- Image Showcase Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+                    {% for i in range(8) %}
+                    <div class="aspect-square rounded-xl overflow-hidden group hover:scale-105 transition-transform duration-300">
+                        <div class="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Features Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                    {% for feature in [
+                        {
+                            'icon': 'paint-palette',
+                            'title': 'مدل‌های متنوع',
+                            'description': 'انتخاب از بین مدل‌های مختلف برای تولید تصاویر با سبک‌های متفاوت'
+                        },
+                        {
+                            'icon': 'magic-wand',
+                            'title': 'ویرایش هوشمند',
+                            'description': 'امکان ویرایش تصاویر با ابزارهای پیشرفته هوش مصنوعی'
+                        },
+                        {
+                            'icon': 'rocket',
+                            'title': 'سرعت فوق‌العاده',
+                            'description': 'تولید تصاویر با کیفیت در کمترین زمان ممکن'
+                        }
+                    ] %}
+                    <div class="feature-card group">
+                        <div class="h-full persian-pattern rounded-2xl shadow-xl border border-purple-500/30 p-8 
+                                    backdrop-blur-sm bg-black/40 hover:scale-105 transition-all duration-300">
+                            <div class="feature-icon-container">
+                                <div class="feature-icon-glow"></div>
+                                <i class="fas fa-{{ feature.icon }} text-4xl text-purple-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r 
+                                       from-purple-400 to-pink-400">
+                                {{ feature.title }}
+                            </h3>
+                            <p class="text-gray-400">{{ feature.description }}</p>
                         </div>
-                        <h2 class="text-xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r 
-                                   from-purple-400 to-pink-400 feature-title">
-                            {{ feature.title }}
-                        </h2>
-                        <p class="text-gray-400 leading-relaxed feature-description">{{ feature.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- AI Models Section -->
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                        مدل‌های هوش مصنوعی
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for model in ['واقع‌گرایانه', 'انیمه', 'نقاشی'] %}
+                        <div class="rounded-xl overflow-hidden group hover:scale-105 transition-transform duration-300">
+                            <div class="aspect-video bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm 
+                                        flex items-center justify-center">
+                                <span class="text-xl text-white">{{ model }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -253,6 +233,24 @@
 @keyframes icon-glow {
     0% { opacity: 0.3; transform: scale(0.95); }
     100% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* Add new styles */
+.neural-button, .plasma-button {
+    @apply relative px-8 py-4 rounded-xl text-lg font-medium transition-all duration-300 
+           hover:scale-105 hover:shadow-lg backdrop-blur-sm;
+}
+
+.neural-button {
+    @apply bg-white text-gray-900;
+}
+
+.plasma-button {
+    @apply bg-gradient-to-r from-amber-500 to-orange-500 text-white;
+}
+
+.feature-icon-container {
+    @apply relative flex items-center justify-center mb-6;
 }
 </style>
 
