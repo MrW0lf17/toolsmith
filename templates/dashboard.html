@@ -154,12 +154,27 @@ function watchAd() {
 
 function downloadImage() {
     const image = document.getElementById('generated-image');
-    const link = document.createElement('a');
-    link.href = image.src;
-    link.download = 'toolsmith-ai-image.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    fetch('/download-image/' + image.src.split('/').pop())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'toolsmith-ai-image.jpeg';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            alert('Error downloading image. Please try again.');
+            console.error('There was an error!', error);
+        });
 }
 
 // Initialize ads

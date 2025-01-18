@@ -12,9 +12,8 @@
                 <div class="p-4">
                     <p class="text-gray-300 text-sm mb-2">{{ image.prompt }}</p>
                     <p class="text-gray-500 text-xs mb-3">تولید شده در {{ image.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                    <button 
-                        onclick="downloadImage({{ image.id }})"
-                        class="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
+                    <button data-image-id="{{ image.id }}"
+                       class="download-btn inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
                         دانلود
                     </button>
                 </div>
@@ -47,6 +46,15 @@
 
 <!-- JavaScript for handling downloads -->
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.download-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const imageId = this.getAttribute('data-image-id');
+                downloadImage(imageId);
+            });
+        });
+    });
+
     function downloadImage(imageId) {
         fetch(`/download-image/${imageId}`)
             .then(response => {
