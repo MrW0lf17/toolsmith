@@ -18,25 +18,30 @@ from urllib.parse import urljoin
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "dev-key-for-local-only")
 
-# Handle Render PostgreSQL URL
+# Handle database configuration
 database_url = os.environ.get("DATABASE_URL")
-if database_url:
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    app.logger.info(f"Database URL configured: {database_url.split('@')[1]}")  # Log only the non-sensitive part
+    app.logger.info("Using PostgreSQL database")
 else:
     # For local development, use SQLite
-    app.logger.warning("No DATABASE_URL found, using SQLite for local development")
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{sqlite_path}'
+    app.logger.info("Using SQLite database for local development")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
 }
+
+# Configure SSL based on environment
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_SECURE'] = True
 
 # Configure logging
 if not app.debug:
@@ -63,9 +68,7 @@ GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configura
 def get_base_url():
     if os.environ.get('FLASK_ENV') == 'production':
         return "https://toolsmith.onrender.com"
-    if request.headers.get('X-Forwarded-Proto') == 'https':
-        return f"https://{request.host}"
-    return request.base_url.rsplit('/', 1)[0]
+    return "http://localhost:5000" if os.environ.get('FLASK_DEBUG') == '1' else "https://localhost:5000"
 
 # Initialize SQLAlchemy after all configurations
 db = SQLAlchemy(app)
@@ -507,11 +510,13 @@ if __name__ == '__main__':
     with app.app_context():
         try:
             db.create_all()
+            app.logger.info("Database tables created successfully")
         except Exception as e:
             app.logger.error(f"Error creating database tables: {e}")
             sys.exit(1)
     
-    if app.debug:
-        app.run(debug=True, ssl_context="adhoc")
+    debug_mode = os.environ.get('FLASK_DEBUG') == '1'
+    if debug_mode:
+        app.run(debug=True, port=5000)
     else:
-        app.run(ssl_context='adhoc')  # Enable HTTPS for OAuth 
+        app.run(ssl_context='adhoc', port=5000)  # Enable HTTPS for OAuth 
