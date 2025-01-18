@@ -495,10 +495,10 @@ def download_image(image_id):
         # Create a BytesIO object from the image data
         image_data = BytesIO(response.content)
         
-        # Send the file with disposition as attachment to force download
+        # Use 'application/octet-stream' to enforce download
         return send_file(
             image_data,
-            mimetype='image/jpeg',
+            mimetype='application/octet-stream',
             as_attachment=True,
             download_name=f'generated-image-{image.id}.jpeg'
         )

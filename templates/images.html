@@ -12,10 +12,11 @@
                 <div class="p-4">
                     <p class="text-gray-300 text-sm mb-2">{{ image.prompt }}</p>
                     <p class="text-gray-500 text-xs mb-3">تولید شده در {{ image.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                    <a href="{{ url_for('download_image', image_id=image.id) }}"
-                       class="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
+                    <button 
+                        onclick="downloadImage({{ image.id }})"
+                        class="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
                         دانلود
-                    </a>
+                    </button>
                 </div>
             </div>
             {% endfor %}
@@ -43,4 +44,31 @@
         </script>
     </div>
 </div>
+
+<!-- JavaScript for handling downloads -->
+<script>
+    function downloadImage(imageId) {
+        fetch(`/download-image/${imageId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `generated-image-${imageId}.jpeg`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                alert('Error downloading image. Please try again.');
+                console.error('There was an error!', error);
+            });
+    }
+</script>
 {% endblock %} 
