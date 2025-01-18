@@ -286,12 +286,13 @@ def login():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
     if not google_provider_cfg:
+        app.logger.error("Error loading Google configuration")
         return "Error loading Google configuration", 500
     
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
     
-    # Hard-coded callback URL that matches exactly with Google Console
-    callback_url = "https://toolsmith.onrender.com/login/callback"
+    # Use the base URL function to dynamically determine the callback URL
+    callback_url = urljoin(get_base_url(), "/login/callback")
     app.logger.info(f"Using callback URL: {callback_url}")
     
     # Use library to construct the request for Google login
@@ -307,17 +308,19 @@ def callback():
     # Get authorization code Google sent back
     code = request.args.get("code")
     if not code:
+        app.logger.error("Authorization code not received")
         return "Authorization code not received", 400
     
     # Find out what URL to hit to get tokens
     google_provider_cfg = get_google_provider_cfg()
     if not google_provider_cfg:
+        app.logger.error("Error loading Google configuration")
         return "Error loading Google configuration", 500
     
     token_endpoint = google_provider_cfg["token_endpoint"]
     
-    # Hard-coded callback URL that matches exactly with Google Console
-    callback_url = "https://toolsmith.onrender.com/login/callback"
+    # Use the base URL function to dynamically determine the callback URL
+    callback_url = urljoin(get_base_url(), "/login/callback")
     
     try:
         # Prepare and send request to get tokens
@@ -334,6 +337,7 @@ def callback():
             data=body,
             auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
         )
+        token_response.raise_for_status()  # Ensure the request was successful
 
         # Parse the tokens
         client.parse_request_body_response(json.dumps(token_response.json()))
@@ -364,10 +368,14 @@ def callback():
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
+            app.logger.error("User email not verified by Google.")
             return "User email not verified by Google.", 400
             
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Error in token exchange: {str(e)}")
+        return f"Error during authentication: {str(e)}", 500
     except Exception as e:
-        app.logger.error(f"Error in callback: {str(e)}")
+        app.logger.error(f"Unexpected error in callback: {str(e)}")
         return f"Error during authentication: {str(e)}", 500
 
 @app.route('/logout')
