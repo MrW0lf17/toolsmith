@@ -10,10 +10,9 @@ from io import BytesIO
 import logging
 from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
-from functools import lru_cache
 import sys
 from urllib.parse import urljoin
-from translate import translate_to_english
+from translate import translate_to_english, translate_to_persian
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +37,14 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
 }
+
+# API Configuration
+app.config['FLUX_API_KEY'] = os.environ.get('FLUX_API_KEY')
+if not app.config['FLUX_API_KEY']:
+    app.logger.error("API key not configured!")
+
+app.config['API_URL'] = "https://api.together.xyz/v1/images/generations"
+app.config['CHAT_API_URL'] = "https://api.together.xyz/v1/chat/completions"
 
 # Configure SSL based on environment
 if os.environ.get('FLASK_ENV') == 'production':
@@ -89,14 +96,6 @@ def init_oauth():
 
 # Call initialization after app creation
 init_oauth()
-
-# API Configuration
-API_KEY = os.environ.get('FLUX_API_KEY')
-if not API_KEY:
-    app.logger.error("API key not configured!")
-
-API_URL = "https://api.together.xyz/v1/images/generations"
-CHAT_API_URL = "https://api.together.xyz/v1/chat/completions"
 
 # Models
 class User(UserMixin, db.Model):
@@ -255,7 +254,7 @@ def generate_image(prompt: str) -> str:
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "authorization": f"Bearer {API_KEY}"
+        "authorization": f"Bearer {app.config['FLUX_API_KEY']}"
     }
     
     try:
@@ -276,7 +275,7 @@ def generate_image(prompt: str) -> str:
         }
         
         app.logger.info(f"Sending request to API with prompt: {enhanced_prompt}")
-        response = requests.post(API_URL, json=data, headers=headers, timeout=30)
+        response = requests.post(app.config['API_URL'], json=data, headers=headers, timeout=30)
         response.raise_for_status()
         
         result = response.json()
@@ -435,31 +434,36 @@ def dashboard():
 @app.route('/generate', methods=['POST'])
 @login_required
 def generate():
+    if current_user.credits <= 0:
+        return jsonify({'error': translate_to_persian("You don't have enough credits")}), 400
+    
+    prompt = request.form.get('prompt')
+    if not prompt:
+        return jsonify({'error': translate_to_persian("Please enter an image description")}), 400
+    
+    image_url = generate_image(prompt)
+    if not image_url:
+        return jsonify({'error': translate_to_persian("Error generating image. Please try again")}), 500
+    
     try:
-        data = request.get_json()
-        prompt = data.get('prompt')
-        selected_model = data.get('model', 'واقع‌گرایانه')  # Default to realistic if not specified
+        # Create new image record
+        image = Image(prompt=prompt, image_url=image_url, user_id=current_user.id)
+        current_user.credits -= 1
         
-        # Translate prompt to English
-        english_prompt = translate_to_english(prompt)
+        db.session.add(image)
+        db.session.commit()
         
-        # Get model configuration
-        model_config = AI_MODELS.get(selected_model, AI_MODELS['واقع‌گرایانه'])
-        
-        # Combine model prefix with translated prompt
-        final_prompt = f"{model_config['prompt_prefix']}{english_prompt}"
-        
-        # Add the negative prompt to your existing image generation call
-        negative_prompt = model_config['negative_prompt']
-        
-        # Your existing image generation code here
-        # Make sure to pass both final_prompt and negative_prompt to your generation function
-        image_url = generate_image_with_model(final_prompt, negative_prompt)
-        
-        return jsonify({'success': True, 'image_url': image_url})
-        
+        return jsonify({
+            'success': True,
+            'image_url': image_url,
+            'image_id': image.id,
+            'credits_remaining': current_user.credits,
+            'message': translate_to_persian("Image generated successfully")
+        })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        app.logger.error(f"Database error: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': translate_to_persian("Error saving image. Please try again")}), 500
 
 @app.route('/add_credits', methods=['POST'])
 @login_required
@@ -529,40 +533,6 @@ def serve_image(image_id):
     except Exception as e:
         app.logger.error(f"Error serving image: {str(e)}")
         return "Error serving image", 500
-
-# Add the AI models configuration
-AI_MODELS = {
-    'واقع‌گرایانه': {
-        'id': 'realistic',
-        'prompt_prefix': 'ultra realistic, photorealistic, highly detailed, 8k resolution, ',
-        'negative_prompt': 'cartoon, anime, illustration, painting, drawing, artwork'
-    },
-    'انیمه': {
-        'id': 'anime',
-        'prompt_prefix': 'anime style, manga art, detailed anime illustration, ',
-        'negative_prompt': 'photorealistic, 3d render, photograph, realistic'
-    },
-    'نقاشی': {
-        'id': 'painting',
-        'prompt_prefix': 'digital art, artistic painting style, vibrant colors, ',
-        'negative_prompt': 'photograph, 3d render, low quality'
-    },
-    'پیکسل آرت': {
-        'id': 'pixel',
-        'prompt_prefix': 'pixel art style, retro game art, 16-bit, ',
-        'negative_prompt': 'realistic, photograph, 3d, smooth'
-    },
-    'مینیمال': {
-        'id': 'minimal',
-        'prompt_prefix': 'minimalist style, simple design, clean lines, ',
-        'negative_prompt': 'busy, detailed, complex, cluttered'
-    },
-    '3D رندر': {
-        'id': '3d',
-        'prompt_prefix': '3D render, octane render, cinema 4d, ',
-        'negative_prompt': 'photograph, 2d, flat, hand drawn'
-    }
-}
 
 if __name__ == '__main__':
     with app.app_context():
