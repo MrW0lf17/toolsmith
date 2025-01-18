@@ -1,25 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="persian-pattern rounded-xl shadow-xl border border-purple-900 p-8 mb-8">
-        <div class="flex items-center mb-6">
-            <img src="https://img.icons8.com/color/48/persian-ornament.png" alt="Persian Ornament" class="ml-4">
-            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تولید تصویر</h2>
+<div class="max-w-4xl mx-auto px-4">
+    <div class="persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
+        <div class="flex items-center mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تولید تصویر</h2>
         </div>
         
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-6">
             <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">توضیحات تصویر مورد نظر خود را وارد کنید</label>
             <textarea id="prompt" rows="3"
-                      class="w-full bg-gray-800 border border-purple-900 rounded-lg py-3 px-4 text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 placeholder-gray-500"
+                      class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 placeholder-gray-500"
                       placeholder="تصویری که می‌خواهید تولید کنید را توصیف کنید... مثال: یک قصر ایرانی با گنبد فیروزه‌ای در غروب آفتاب"></textarea>
         </div>
 
         <!-- Model Selection -->
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-6">
             <label for="model" class="block text-gray-300 text-sm font-bold mb-2">انتخاب مدل</label>
             <select id="model" 
-                    class="w-full bg-gray-800 border border-purple-900 rounded-lg py-3 px-4 text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                    class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
                 <option value="realistic">واقع‌گرایانه</option>
                 <option value="anime">انیمه</option>
                 <option value="painting">نقاشی</option>
@@ -29,31 +28,31 @@
             </select>
         </div>
         
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row items-center gap-3 sm:justify-between">
             <button id="generate-btn" onclick="generateImage()"
-                    class="flex items-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg font-bold hover:from-purple-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
-                <img src="https://img.icons8.com/color/24/magic-wand.png" alt="Magic Wand" class="ml-2">
+                    class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-purple-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
+                <img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
                 تولید تصویر (۱ اعتبار)
             </button>
             <button id="add-credits-btn" onclick="watchAd()"
-                    class="flex items-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-3 rounded-lg font-bold hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
-                <img src="https://img.icons8.com/color/24/video-playlist.png" alt="Video" class="ml-2">
+                    class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
+                <img src="https://img.icons8.com/color/24/video-playlist.png" alt="Video" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
                 تماشای تبلیغ برای ۱۰ اعتبار
             </button>
         </div>
     </div>
 
     <!-- Generated image display -->
-    <div id="result" class="hidden persian-pattern rounded-xl shadow-xl border border-purple-900 p-8 mb-8">
-        <div class="flex items-center mb-4">
-            <img src="https://img.icons8.com/color/48/art-gallery.png" alt="Gallery" class="ml-4">
-            <h3 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تصویر تولید شده</h3>
+    <div id="result" class="hidden persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
+        <div class="flex items-center mb-3 sm:mb-4">
+            <img src="https://img.icons8.com/color/48/art-gallery.png" alt="Gallery" class="ml-2 sm:ml-4 w-8 h-8 sm:w-12 sm:h-12">
+            <h3 class="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تصویر تولید شده</h3>
         </div>
         <div class="relative">
             <img id="generated-image" src="" alt="تصویر تولید شده" class="w-full rounded-lg shadow-2xl">
             <button onclick="downloadImage()"
-                    class="absolute bottom-4 right-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg font-bold hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
-                <img src="https://img.icons8.com/color/24/download--v1.png" alt="Download" class="ml-2">
+                    class="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
+                <img src="https://img.icons8.com/color/24/download--v1.png" alt="Download" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
                 دانلود
             </button>
         </div>
@@ -61,15 +60,15 @@
 
     <!-- Ad modal -->
     <div id="ad-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-2xl rounded-xl persian-pattern border-purple-900">
-            <div class="mt-3 text-center">
-                <div class="flex items-center justify-center mb-4">
-                    <img src="https://img.icons8.com/color/48/video-playlist.png" alt="Video" class="ml-2">
-                    <h3 class="text-lg leading-6 font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تماشای تبلیغ</h3>
+        <div class="relative top-20 mx-auto p-4 sm:p-5 border w-11/12 sm:w-96 shadow-2xl rounded-xl persian-pattern border-purple-900">
+            <div class="mt-2 sm:mt-3 text-center">
+                <div class="flex items-center justify-center mb-3 sm:mb-4">
+                    <img src="https://img.icons8.com/color/48/video-playlist.png" alt="Video" class="ml-2 w-8 h-8 sm:w-12 sm:h-12">
+                    <h3 class="text-base sm:text-lg leading-6 font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">تماشای تبلیغ</h3>
                 </div>
-                <div class="mt-2 px-7 py-3">
+                <div class="mt-2 px-4 sm:px-7 py-2 sm:py-3">
                     <!-- Ad placeholder -->
-                    <div class="bg-gray-800 p-4 rounded-lg mb-4 border border-purple-800">
+                    <div class="bg-gray-800 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4 border border-purple-800">
                         <ins class="adsbygoogle"
                              style="display:block"
                              data-ad-client="your-client-id"
@@ -77,11 +76,11 @@
                              data-ad-format="auto"
                              data-full-width-responsive="true"></ins>
                     </div>
-                    <p id="ad-timer" class="text-sm text-gray-400">زمان باقی‌مانده: ۳۰ ثانیه</p>
+                    <p id="ad-timer" class="text-xs sm:text-sm text-gray-400">زمان باقی‌مانده: ۳۰ ثانیه</p>
                 </div>
-                <div class="items-center px-4 py-3">
+                <div class="items-center px-3 sm:px-4 py-2 sm:py-3">
                     <button id="close-ad" disabled
-                            class="w-full px-4 py-2 bg-gray-700 text-gray-300 text-base font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300">
+                            class="w-full px-3 sm:px-4 py-2 bg-gray-700 text-gray-300 text-sm sm:text-base font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300">
                         لطفاً صبر کنید...
                     </button>
                 </div>
@@ -101,7 +100,7 @@ function generateImage() {
 
     const generateBtn = document.getElementById('generate-btn');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<img src="https://img.icons8.com/color/24/loading.gif" alt="Loading" class="ml-2">در حال تولید...';
+    generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">در حال تولید...';
 
     fetch('/generate', {
         method: 'POST',
@@ -128,7 +127,7 @@ function generateImage() {
     })
     .finally(() => {
         generateBtn.disabled = false;
-        generateBtn.innerHTML = '<img src="https://img.icons8.com/color/24/magic-wand.png" alt="Magic Wand" class="ml-2">تولید تصویر (۱ اعتبار)';
+        generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">تولید تصویر (۱ اعتبار)';
     });
 }
 
