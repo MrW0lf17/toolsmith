@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="{{ session.get('lang', 'fa') }}" dir="{{ 'rtl' if session.get('lang', 'fa') in ['fa', 'ar'] else 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,6 +41,30 @@
             height: 2px;
             background: linear-gradient(to right, transparent, #8b5cf6, transparent);
         }
+        .language-selector {
+            position: relative;
+            display: inline-block;
+        }
+        .language-selector select {
+            appearance: none;
+            background: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            border-radius: 0.5rem;
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            color: #e5e7eb;
+            cursor: pointer;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238B5CF6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5em 1.5em;
+        }
+        .language-selector select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+        }
     </style>
 </head>
 <body class="min-h-screen text-gray-100">
@@ -53,19 +77,35 @@
                     </a>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                    <div class="language-selector">
+                        <select id="language-select" onchange="changeLanguage(this.value)" class="bg-gray-800">
+                            <option value="fa" {{ 'selected' if session.get('lang') == 'fa' }}>فارسی</option>
+                            <option value="en" {{ 'selected' if session.get('lang') == 'en' }}>English</option>
+                            <option value="zh" {{ 'selected' if session.get('lang') == 'zh' }}>中文</option>
+                            <option value="it" {{ 'selected' if session.get('lang') == 'it' }}>Italiano</option>
+                            <option value="de" {{ 'selected' if session.get('lang') == 'de' }}>Deutsch</option>
+                            <option value="ja" {{ 'selected' if session.get('lang') == 'ja' }}>日本語</option>
+                            <option value="fr" {{ 'selected' if session.get('lang') == 'fr' }}>Français</option>
+                            <option value="hi" {{ 'selected' if session.get('lang') == 'hi' }}>हिन्दी</option>
+                            <option value="ru" {{ 'selected' if session.get('lang') == 'ru' }}>Русский</option>
+                            <option value="tr" {{ 'selected' if session.get('lang') == 'tr' }}>Türkçe</option>
+                            <option value="az" {{ 'selected' if session.get('lang') == 'az' }}>Azərbaycan</option>
+                            <option value="id" {{ 'selected' if session.get('lang') == 'id' }}>Bahasa Indonesia</option>
+                        </select>
+                    </div>
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('dashboard') }}" class="py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base text-gray-300 hover:text-purple-400">داشبورد</a>
-                        <a href="{{ url_for('images') }}" class="py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base text-gray-300 hover:text-purple-400">تصاویر من</a>
-                        <span class="py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base text-gray-300">اعتبار: <span id="credits-count" class="text-purple-400">{{ current_user.credits }}</span></span>
+                        <a href="{{ url_for('dashboard') }}" class="py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base text-gray-300 hover:text-purple-400">{{ _('Dashboard') }}</a>
+                        <a href="{{ url_for('images') }}" class="py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base text-gray-300 hover:text-purple-400">{{ _('My Images') }}</a>
+                        <span class="py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base text-gray-300">{{ _('Credits') }}: <span id="credits-count" class="text-purple-400">{{ current_user.credits }}</span></span>
                         <div class="flex items-center gap-2 bg-gray-800 rounded-lg px-2 sm:px-3 py-1 border border-purple-900">
                             <span class="text-sm sm:text-base text-gray-300 ml-1 sm:ml-2">{{ current_user.name }}</span>
                             <img src="{{ current_user.profile_pic }}" alt="Profile" class="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-purple-500">
                         </div>
-                        <a href="{{ url_for('logout') }}" class="py-1.5 sm:py-2 px-3 sm:px-4 text-sm sm:text-base bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition duration-300">خروج</a>
+                        <a href="{{ url_for('logout') }}" class="py-1.5 sm:py-2 px-3 sm:px-4 text-sm sm:text-base bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition duration-300">{{ _('Logout') }}</a>
                     {% else %}
                         <a href="{{ url_for('login') }}" class="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 border border-purple-700 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-200 hover:from-purple-700 hover:to-indigo-700 transition duration-300">
                             <img src="https://www.google.com/favicon.ico" alt="Google" class="w-4 h-4 sm:w-5 sm:h-5">
-                            <span>ورود با گوگل</span>
+                            <span>{{ _('Login with Google') }}</span>
                         </a>
                     {% endif %}
                 </div>
@@ -90,8 +130,24 @@
     <footer class="nav-pattern shadow-xl border-t border-purple-900 mt-8">
         <div class="container mx-auto px-4 py-6">
             <div class="persian-divider mb-6"></div>
-            <p class="text-center text-gray-400">تمامی حقوق محفوظ است &copy; ۲۰۲۴ Toolsmith AI</p>
+            <p class="text-center text-gray-400">{{ _('All rights reserved') }} &copy; 2024 Toolsmith AI</p>
         </div>
     </footer>
+
+    <script>
+    function changeLanguage(lang) {
+        fetch('/set-language', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ lang: lang })
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+    </script>
 </body>
 </html> 

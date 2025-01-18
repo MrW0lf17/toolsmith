@@ -13,12 +13,47 @@ from dotenv import load_dotenv
 from functools import lru_cache
 import sys
 from urllib.parse import urljoin
+from translations import translations
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "dev-key-for-local-only")
+
+# Supported languages
+LANGUAGES = {
+    'fa': 'Persian',
+    'en': 'English',
+    'zh': 'Chinese',
+    'it': 'Italian',
+    'de': 'German',
+    'ja': 'Japanese',
+    'fr': 'French',
+    'hi': 'Hindi',
+    'ru': 'Russian',
+    'tr': 'Turkish',
+    'az': 'Azerbaijani',
+    'id': 'Indonesian'
+}
+
+def _(text):
+    """Translation function"""
+    lang = session.get('lang', 'fa')
+    return translations.get(lang, {}).get(text, text)
+
+@app.context_processor
+def inject_translations():
+    """Make translation function available in templates"""
+    return dict(_=_)
+
+@app.route('/set-language', methods=['POST'])
+def set_language():
+    data = request.get_json()
+    if data and 'lang' in data and data['lang'] in LANGUAGES:
+        session['lang'] = data['lang']
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error'}), 400
 
 # Handle database configuration
 database_url = os.environ.get("DATABASE_URL")
@@ -160,7 +195,7 @@ def translate_text(text: str, target_lang: str) -> str:
     
     Args:
         text: Text to translate
-        target_lang: Target language ('en' for English, 'fa' for Persian)
+        target_lang: Target language code ('en', 'fa', 'zh', 'it', 'de', 'ja', 'fr', 'hi', 'ru')
     
     Returns:
         Translated text
@@ -171,8 +206,16 @@ def translate_text(text: str, target_lang: str) -> str:
     if not text:
         return text
         
-    # Skip translation if text is already in target language (basic check)
+    # Skip translation if text appears to be in target language (basic check)
     if target_lang == 'fa' and any('\u0600' <= c <= '\u06FF' for c in text):
+        return text
+    elif target_lang == 'zh' and any('\u4e00' <= c <= '\u9fff' for c in text):
+        return text
+    elif target_lang == 'ja' and any('\u3040' <= c <= '\u30ff' for c in text):
+        return text
+    elif target_lang == 'ru' and any('\u0400' <= c <= '\u04FF' for c in text):
+        return text
+    elif target_lang == 'hi' and any('\u0900' <= c <= '\u097F' for c in text):
         return text
     elif target_lang == 'en' and all(ord(c) < 128 for c in text):
         return text
@@ -185,9 +228,22 @@ def translate_text(text: str, target_lang: str) -> str:
     
     system_prompt = {
         'fa': "You are a professional Persian (Farsi) translator. Translate the following text to natural, fluent Persian. Only respond with the translation, no explanations.",
-        'en': "You are a professional English translator. Translate the following text to natural, fluent English. Only respond with the translation, no explanations."
+        'en': "You are a professional English translator. Translate the following text to natural, fluent English. Only respond with the translation, no explanations.",
+        'zh': "You are a professional Chinese (Simplified) translator. Translate the following text to natural, fluent Chinese. Only respond with the translation, no explanations.",
+        'it': "You are a professional Italian translator. Translate the following text to natural, fluent Italian. Only respond with the translation, no explanations.",
+        'de': "You are a professional German translator. Translate the following text to natural, fluent German. Only respond with the translation, no explanations.",
+        'ja': "You are a professional Japanese translator. Translate the following text to natural, fluent Japanese. Only respond with the translation, no explanations.",
+        'fr': "You are a professional French translator. Translate the following text to natural, fluent French. Only respond with the translation, no explanations.",
+        'hi': "You are a professional Hindi translator. Translate the following text to natural, fluent Hindi. Only respond with the translation, no explanations.",
+        'ru': "You are a professional Russian translator. Translate the following text to natural, fluent Russian. Only respond with the translation, no explanations.",
+        'tr': "You are a professional Turkish translator. Translate the following text to natural, fluent Turkish. Only respond with the translation, no explanations.",
+        'az': "You are a professional Azerbaijani translator. Translate the following text to natural, fluent Azerbaijani. Only respond with the translation, no explanations.",
+        'id': "You are a professional Indonesian translator. Translate the following text to natural, fluent Indonesian. Only respond with the translation, no explanations."
     }
     
+    if target_lang not in system_prompt:
+        raise TranslationError(f"Unsupported target language: {target_lang}")
+
     data = {
         "model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         "messages": [
@@ -200,7 +256,7 @@ def translate_text(text: str, target_lang: str) -> str:
                 "content": text
             }
         ],
-        "temperature": 0.3,  # Lower temperature for more consistent translations
+        "temperature": 0.3,
         "max_tokens": 200
     }
     
@@ -225,6 +281,56 @@ def translate_text(text: str, target_lang: str) -> str:
     except Exception as e:
         app.logger.error(f"Unexpected translation error: {str(e)}")
         raise TranslationError(f"Unexpected error: {str(e)}")
+
+# Add translation functions for each language
+def translate_to_chinese(text: str) -> str:
+    try:
+        return translate_text(text, 'zh')
+    except TranslationError as e:
+        app.logger.error(f"Chinese translation failed: {str(e)}")
+        return text
+
+def translate_to_italian(text: str) -> str:
+    try:
+        return translate_text(text, 'it')
+    except TranslationError as e:
+        app.logger.error(f"Italian translation failed: {str(e)}")
+        return text
+
+def translate_to_german(text: str) -> str:
+    try:
+        return translate_text(text, 'de')
+    except TranslationError as e:
+        app.logger.error(f"German translation failed: {str(e)}")
+        return text
+
+def translate_to_japanese(text: str) -> str:
+    try:
+        return translate_text(text, 'ja')
+    except TranslationError as e:
+        app.logger.error(f"Japanese translation failed: {str(e)}")
+        return text
+
+def translate_to_french(text: str) -> str:
+    try:
+        return translate_text(text, 'fr')
+    except TranslationError as e:
+        app.logger.error(f"French translation failed: {str(e)}")
+        return text
+
+def translate_to_hindi(text: str) -> str:
+    try:
+        return translate_text(text, 'hi')
+    except TranslationError as e:
+        app.logger.error(f"Hindi translation failed: {str(e)}")
+        return text
+
+def translate_to_russian(text: str) -> str:
+    try:
+        return translate_text(text, 'ru')
+    except TranslationError as e:
+        app.logger.error(f"Russian translation failed: {str(e)}")
+        return text
 
 def translate_to_persian(text: str) -> str:
     """Translate text to Persian with fallback"""
