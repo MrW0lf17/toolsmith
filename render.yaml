@@ -1,31 +1,28 @@
 services:
   - type: web
-    name: imggenerator
+    name: toolsmith
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python -c "from app import app, db; app.app_context().push(); db.create_all()" && gunicorn app:app
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: FLASK_ENV
-        value: production
-      - key: FLASK_DEBUG
-        value: "0"
+        value: 3.9.0
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolsmith-db
+          property: connectionString
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: FLUX_API_KEY
         sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: imggenerator_db
-          property: connectionString
 
 databases:
-  - name: imggenerator_db
-    databaseName: imggenerator
-    user: imggenerator
+  - name: toolsmith-db
+    databaseName: toolsmith
     plan: free 
