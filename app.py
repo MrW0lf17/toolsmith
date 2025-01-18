@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from functools import lru_cache
 import sys
 from urllib.parse import urljoin
+from translate import translate_to_english
 
 # Load environment variables
 load_dotenv()
@@ -434,36 +435,31 @@ def dashboard():
 @app.route('/generate', methods=['POST'])
 @login_required
 def generate():
-    if current_user.credits <= 0:
-        return jsonify({'error': translate_to_persian("You don't have enough credits")}), 400
-    
-    prompt = request.form.get('prompt')
-    if not prompt:
-        return jsonify({'error': translate_to_persian("Please enter an image description")}), 400
-    
-    image_url = generate_image(prompt)
-    if not image_url:
-        return jsonify({'error': translate_to_persian("Error generating image. Please try again")}), 500
-    
     try:
-        # Create new image record
-        image = Image(prompt=prompt, image_url=image_url, user_id=current_user.id)
-        current_user.credits -= 1
+        data = request.get_json()
+        prompt = data.get('prompt')
+        selected_model = data.get('model', 'واقع‌گرایانه')  # Default to realistic if not specified
         
-        db.session.add(image)
-        db.session.commit()
+        # Translate prompt to English
+        english_prompt = translate_to_english(prompt)
         
-        return jsonify({
-            'success': True,
-            'image_url': image_url,
-            'image_id': image.id,
-            'credits_remaining': current_user.credits,
-            'message': translate_to_persian("Image generated successfully")
-        })
+        # Get model configuration
+        model_config = AI_MODELS.get(selected_model, AI_MODELS['واقع‌گرایانه'])
+        
+        # Combine model prefix with translated prompt
+        final_prompt = f"{model_config['prompt_prefix']}{english_prompt}"
+        
+        # Add the negative prompt to your existing image generation call
+        negative_prompt = model_config['negative_prompt']
+        
+        # Your existing image generation code here
+        # Make sure to pass both final_prompt and negative_prompt to your generation function
+        image_url = generate_image_with_model(final_prompt, negative_prompt)
+        
+        return jsonify({'success': True, 'image_url': image_url})
+        
     except Exception as e:
-        app.logger.error(f"Database error: {str(e)}")
-        db.session.rollback()
-        return jsonify({'error': translate_to_persian("Error saving image. Please try again")}), 500
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/add_credits', methods=['POST'])
 @login_required
@@ -533,6 +529,40 @@ def serve_image(image_id):
     except Exception as e:
         app.logger.error(f"Error serving image: {str(e)}")
         return "Error serving image", 500
+
+# Add the AI models configuration
+AI_MODELS = {
+    'واقع‌گرایانه': {
+        'id': 'realistic',
+        'prompt_prefix': 'ultra realistic, photorealistic, highly detailed, 8k resolution, ',
+        'negative_prompt': 'cartoon, anime, illustration, painting, drawing, artwork'
+    },
+    'انیمه': {
+        'id': 'anime',
+        'prompt_prefix': 'anime style, manga art, detailed anime illustration, ',
+        'negative_prompt': 'photorealistic, 3d render, photograph, realistic'
+    },
+    'نقاشی': {
+        'id': 'painting',
+        'prompt_prefix': 'digital art, artistic painting style, vibrant colors, ',
+        'negative_prompt': 'photograph, 3d render, low quality'
+    },
+    'پیکسل آرت': {
+        'id': 'pixel',
+        'prompt_prefix': 'pixel art style, retro game art, 16-bit, ',
+        'negative_prompt': 'realistic, photograph, 3d, smooth'
+    },
+    'مینیمال': {
+        'id': 'minimal',
+        'prompt_prefix': 'minimalist style, simple design, clean lines, ',
+        'negative_prompt': 'busy, detailed, complex, cluttered'
+    },
+    '3D رندر': {
+        'id': '3d',
+        'prompt_prefix': '3D render, octane render, cinema 4d, ',
+        'negative_prompt': 'photograph, 2d, flat, hand drawn'
+    }
+}
 
 if __name__ == '__main__':
     with app.app_context():
