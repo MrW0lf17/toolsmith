@@ -522,7 +522,8 @@ def callback():
                         email=users_email,
                         name=users_name,
                         profile_pic=picture,
-                        credits=5
+                        credits=5,
+                        is_vip=False  # Add default value for new field
                     )
                     db.session.add(user)
                     db.session.commit()
