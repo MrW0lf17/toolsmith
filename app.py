@@ -57,8 +57,10 @@ def set_language():
 
 # Handle database configuration
 database_url = os.environ.get("DATABASE_URL")
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+if database_url:
+    # Handle Render.com's PostgreSQL URL format
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.logger.info("Using PostgreSQL database")
 else:
@@ -69,8 +71,10 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle': 300,
+    'pool_pre_ping': True,  # Verify database connection before using it
+    'pool_recycle': 300,    # Recycle connections every 5 minutes
+    'pool_timeout': 30,     # Connection timeout of 30 seconds
+    'max_overflow': 15      # Allow up to 15 extra connections
 }
 
 # Configure SSL based on environment
@@ -111,36 +115,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Initialize subscription plans
-with app.app_context():
-    try:
-        db.create_all()
-        create_subscription_plans()
-        app.logger.info("Database tables and subscription plans initialized")
-    except Exception as e:
-        app.logger.error(f"Error initializing database: {e}")
-
-# Initialize OAuth properly
-client = None
-
-def init_oauth():
-    global client
-    if GOOGLE_CLIENT_ID:
-        client = WebApplicationClient(GOOGLE_CLIENT_ID)
-    else:
-        app.logger.error("Google OAuth client ID not configured!")
-
-# Call initialization after app creation
-init_oauth()
-
-# API Configuration
-API_KEY = os.environ.get('FLUX_API_KEY')
-if not API_KEY:
-    app.logger.error("API key not configured!")
-
-API_URL = "https://api.together.xyz/v1/images/generations"
-CHAT_API_URL = "https://api.together.xyz/v1/chat/completions"
-
 # Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -170,6 +144,54 @@ class Image(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Initialize subscription plans
+def create_subscription_plans():
+    """Create initial subscription plans if they don't exist"""
+    try:
+        if not Subscription.query.first():
+            basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=0, no_ads=True)
+            premium = Subscription(name='Premium VIP', price=10.0, monthly_credits=100, no_ads=True)
+            db.session.add(basic)
+            db.session.add(premium)
+            db.session.commit()
+            app.logger.info("Subscription plans created successfully")
+    except Exception as e:
+        app.logger.error(f"Error creating subscription plans: {e}")
+        db.session.rollback()
+
+# Create all tables first, then initialize data
+with app.app_context():
+    try:
+        # Create all tables
+        db.create_all()
+        app.logger.info("Database tables created successfully")
+        # Initialize subscription plans
+        create_subscription_plans()
+    except Exception as e:
+        app.logger.error(f"Error initializing database: {e}")
+        raise
+
+# Initialize OAuth properly
+client = None
+
+def init_oauth():
+    global client
+    if GOOGLE_CLIENT_ID:
+        client = WebApplicationClient(GOOGLE_CLIENT_ID)
+    else:
+        app.logger.error("Google OAuth client ID not configured!")
+
+# Call initialization after app creation
+init_oauth()
+
+# API Configuration
+API_KEY = os.environ.get('FLUX_API_KEY')
+if not API_KEY:
+    app.logger.error("API key not configured!")
+
+API_URL = "https://api.together.xyz/v1/images/generations"
+CHAT_API_URL = "https://api.together.xyz/v1/chat/completions"
 
 # Test login route - only available in development
 @app.route('/test-login')
@@ -685,15 +707,6 @@ def subscribe(plan_id):
     db.session.commit()
     flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
     return redirect(url_for('dashboard'))
-
-def create_subscription_plans():
-    """Create initial subscription plans if they don't exist"""
-    if not Subscription.query.first():
-        basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=0, no_ads=True)
-        premium = Subscription(name='Premium VIP', price=10.0, monthly_credits=100, no_ads=True)
-        db.session.add(basic)
-        db.session.add(premium)
-        db.session.commit()
 
 if __name__ == '__main__':
     with app.app_context():

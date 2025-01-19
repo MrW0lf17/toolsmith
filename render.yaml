@@ -10,7 +10,7 @@ services:
       gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.9.0
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
@@ -41,5 +41,5 @@ services:
 databases:
   - name: toolsmith-db
     databaseName: toolsmith
-    user: toolsmith
-    plan: free 
+    plan: free
+    ipAllowList: [] # only allow internal connections 

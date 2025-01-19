@@ -3,18 +3,12 @@
 .env.*
 !.env.example
 
-# Database
-*.db
-app.db
-instance/
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -31,13 +25,25 @@ wheels/
 .installed.cfg
 *.egg
 
-# Logs
-logs/
-*.log
+# Virtual Environment
+venv/
+env/
+ENV/
 
-# IDE specific files
+# Database
+*.db
+*.sqlite3
+app.db
+instance/
+
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.DS_Store 
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log 
