@@ -203,11 +203,60 @@
 </div>
 
 <script>
+function showNotification(message, type = 'error') {
+    const container = document.getElementById('notification-container');
+    if (!container) {
+        // Create container if it doesn't exist
+        const newContainer = document.createElement('div');
+        newContainer.id = 'notification-container';
+        newContainer.className = 'fixed top-4 right-4 z-50 w-96 max-w-[90vw]';
+        document.body.appendChild(newContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `notification-toast bg-gradient-to-r ${type === 'error' ? 'from-red-900 to-red-800 border-red-500' : 'from-green-900 to-green-800 border-green-500'} border-l-4 text-white px-6 py-4 rounded-lg shadow-2xl mb-4 transform transition-all duration-300 ease-out opacity-0 translate-x-full`;
+    toast.role = 'alert';
+
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <svg class="w-6 h-6 ${type === 'error' ? 'text-red-500' : 'text-green-500'} mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${type === 'error' 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'}
+            </svg>
+            <div class="flex-grow">
+                <p class="font-medium">${type === 'error' ? '{{ _("Error") }}' : '{{ _("Success") }}'}</p>
+                <p class="text-sm opacity-90">${message}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-${type === 'error' ? 'red' : 'green'}-300 hover:text-white focus:outline-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+
+    document.getElementById('notification-container').appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-x-full');
+    }, 100);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 5000);
+}
+
 function generateImage() {
     const prompt = document.getElementById('prompt').value;
     const model = document.getElementById('model').value;
     if (!prompt) {
-        alert("{{ _('Please enter image description') }}");
+        showNotification("{{ _('Please enter image description') }}");
         return;
     }
 
@@ -222,11 +271,10 @@ function generateImage() {
         },
         body: `prompt=${encodeURIComponent(prompt)}&model=${encodeURIComponent(model)}`
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            alert(data.error);
-            return;
+    .then(response => response.json().then(data => ({status: response.status, data})))
+    .then(({status, data}) => {
+        if (status !== 200 || data.error) {
+            throw new Error(data.error || "{{ _('Error generating image. Please try again') }}");
         }
         
         const generatedImage = document.getElementById('generated-image');
@@ -234,9 +282,11 @@ function generateImage() {
         generatedImage.dataset.imageId = data.image_id;
         document.getElementById('result').classList.remove('hidden');
         document.getElementById('credits-count').textContent = data.credits_remaining;
+        
+        showNotification(data.message, 'success');
     })
     .catch(error => {
-        alert("{{ _('Error generating image: ') }}" + error);
+        showNotification(error.message);
     })
     .finally(() => {
         generateBtn.disabled = false;

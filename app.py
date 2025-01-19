@@ -398,8 +398,12 @@ def translate_to_english(text: str) -> str:
         app.logger.error(f"English translation failed: {str(e)}")
         return text
 
-def generate_image(prompt: str) -> str:
+def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     """Generate image from prompt"""
+    if not API_KEY:
+        app.logger.error("API key not configured")
+        return None, "API configuration error"
+
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
@@ -407,21 +411,14 @@ def generate_image(prompt: str) -> str:
     }
     
     try:
-        # Translate prompt to English if needed
-        english_prompt = translate_to_english(prompt)
-        app.logger.info(f"Translated prompt: {english_prompt}")
-        
-        # Get model from request
-        model = request.form.get('model', 'realistic')
-        
         # Model-specific prompt enhancements
         model_prompts = {
-            'realistic': f"professional high-quality detailed photograph of {english_prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
-            'anime': f"high-quality anime illustration of {english_prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
-            'painting': f"artistic digital painting of {english_prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
-            'pixel': f"pixel art style {english_prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
-            'minimal': f"minimalist design of {english_prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
-            '3d': f"3D rendered scene of {english_prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
+            'realistic': f"professional high-quality detailed photograph of {prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
+            'anime': f"high-quality anime illustration of {prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
+            'painting': f"artistic digital painting of {prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
+            'pixel': f"pixel art style {prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
+            'minimal': f"minimalist design of {prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
+            '3d': f"3D rendered scene of {prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
         }
         
         # Enhanced prompt with model-specific guidance
@@ -438,28 +435,36 @@ def generate_image(prompt: str) -> str:
         
         app.logger.info(f"Sending request to API with prompt: {enhanced_prompt}")
         response = requests.post(API_URL, json=data, headers=headers, timeout=30)
-        response.raise_for_status()
         
+        if response.status_code != 200:
+            error_msg = f"API returned status code {response.status_code}"
+            app.logger.error(f"{error_msg}: {response.text}")
+            return None, error_msg
+            
         result = response.json()
         app.logger.debug(f"API Response: {result}")
         
         if 'data' in result and len(result['data']) > 0 and 'url' in result['data'][0]:
-            return result['data'][0]['url']
+            return result['data'][0]['url'], None
         else:
-            app.logger.error(f"Unexpected API response format: {result}")
-            return None
+            error_msg = "Unexpected API response format"
+            app.logger.error(f"{error_msg}: {result}")
+            return None, error_msg
             
     except requests.exceptions.Timeout:
-        app.logger.error("Image generation API timeout")
-        return None
+        error_msg = "Image generation timed out"
+        app.logger.error(error_msg)
+        return None, error_msg
     except requests.exceptions.RequestException as e:
-        app.logger.error(f"Image generation API error: {str(e)}")
+        error_msg = f"Request failed: {str(e)}"
+        app.logger.error(f"{error_msg}")
         if hasattr(e, 'response') and e.response is not None:
             app.logger.error(f"Error Response: {e.response.text}")
-        return None
+        return None, error_msg
     except Exception as e:
-        app.logger.error(f"Unexpected error in image generation: {str(e)}")
-        return None
+        error_msg = f"Unexpected error: {str(e)}"
+        app.logger.error(error_msg)
+        return None, error_msg
 
 @app.route('/')
 def index():
@@ -601,36 +606,47 @@ def subscriptions():
 @app.route('/generate', methods=['POST'])
 @login_required
 def generate():
-    if current_user.credits <= 0:
-        return jsonify({'error': _("You don't have enough credits")}), 400
-    
-    prompt = request.form.get('prompt')
-    if not prompt:
-        return jsonify({'error': _("Please enter an image description")}), 400
-    
-    image_url = generate_image(prompt)
-    if not image_url:
-        return jsonify({'error': _("Error generating image. Please try again")}), 500
-    
     try:
-        # Create new image record
-        image = Image(prompt=prompt, image_url=image_url, user_id=current_user.id)
-        current_user.credits -= 1
+        if current_user.credits <= 0:
+            return jsonify({'error': _("You don't have enough credits")}), 400
         
-        db.session.add(image)
-        db.session.commit()
+        prompt = request.form.get('prompt')
+        if not prompt:
+            return jsonify({'error': _("Please enter an image description")}), 400
         
-        return jsonify({
-            'success': True,
-            'image_url': image_url,
-            'image_id': image.id,
-            'credits_remaining': current_user.credits,
-            'message': _("Image generated successfully")
-        })
+        model = request.form.get('model', 'realistic')
+        
+        # Generate image
+        image_url, error = generate_image(prompt, model)
+        if error:
+            return jsonify({'error': f"{_('Error generating image')}: {error}"}), 500
+        if not image_url:
+            return jsonify({'error': _("Error generating image. Please try again")}), 500
+        
+        try:
+            # Create new image record
+            image = Image(prompt=prompt, image_url=image_url, user_id=current_user.id)
+            current_user.credits -= 1
+            
+            db.session.add(image)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'image_url': image_url,
+                'image_id': image.id,
+                'credits_remaining': current_user.credits,
+                'message': _("Image generated successfully")
+            })
+        except Exception as e:
+            db.session.rollback()
+            error_msg = f"Database error: {str(e)}"
+            app.logger.error(error_msg)
+            return jsonify({'error': _("Error saving image. Please try again")}), 500
+            
     except Exception as e:
-        app.logger.error(f"Database error: {str(e)}")
-        db.session.rollback()
-        return jsonify({'error': _("Error saving image. Please try again")}), 500
+        app.logger.error(f"Unexpected error in generate route: {str(e)}")
+        return jsonify({'error': _("An unexpected error occurred. Please try again")}), 500
 
 @app.route('/add_credits', methods=['POST'])
 @login_required

@@ -73,7 +73,12 @@ translations = {
         'There was an error!': 'There was an error!',
         'Generated at': 'Generated at',
         'You have not generated any images yet.': 'You have not generated any images yet.',
-        'Generate your first image': 'Generate your first image'
+        'Generate your first image': 'Generate your first image',
+        'You don\'t have enough credits': 'You don\'t have enough credits',
+        'Please enter an image description': 'Please enter an image description',
+        'Error generating image. Please try again': 'Error generating image. Please try again',
+        'Image generated successfully': 'Image generated successfully',
+        'Error saving image. Please try again': 'Error saving image. Please try again'
     },
     'fa': {
         'Dashboard': 'داشبورد',
@@ -149,7 +154,12 @@ translations = {
         'There was an error!': 'خطایی رخ داد!',
         'Generated at': 'تولید شده در',
         'You have not generated any images yet.': 'شما هنوز تصویری تولید نکرده‌اید.',
-        'Generate your first image': 'تولید اولین تصویر'
+        'Generate your first image': 'تولید اولین تصویر',
+        'You don\'t have enough credits': 'اعتبار کافی ندارید',
+        'Please enter an image description': 'لطفاً توضیحات تصویر را وارد کنید',
+        'Error generating image. Please try again': 'خطا در تولید تصویر. لطفاً دوباره تلاش کنید',
+        'Image generated successfully': 'تصویر با موفقیت تولید شد',
+        'Error saving image. Please try again': 'خطا در ذخیره تصویر. لطفاً دوباره تلاش کنید'
     },
     'zh': {
         'Dashboard': '仪表板',
@@ -225,7 +235,12 @@ translations = {
         'There was an error!': '发生错误！',
         'Generated at': '生成于',
         'You have not generated any images yet.': '您还没有生成任何图像。',
-        'Generate your first image': '生成您的第一张图像'
+        'Generate your first image': '生成您的第一张图像',
+        'You don\'t have enough credits': '您的积分不足',
+        'Please enter an image description': '请输入图像描述',
+        'Error generating image. Please try again': '生成图像时出错。请重试',
+        'Image generated successfully': '图像生成成功',
+        'Error saving image. Please try again': '保存图像时出错。请重试'
     },
     'it': {
         'Dashboard': 'Pannello di controllo',
@@ -298,10 +313,15 @@ translations = {
         'Error: Image ID not found': 'Errore: ID immagine non trovato',
         'Network response was not ok': 'Risposta di rete non valida',
         'Error downloading image. Please try again.': 'Errore durante il download dell\'immagine. Riprova, per favore.',
-        'There was an error!': 'Si è verificato un errore!',
+        'There was an error!': 'Si è verificato un errore !',
         'Generated at': 'Generato il',
         'You have not generated any images yet.': 'Non hai ancora generato nessuna immagine.',
-        'Generate your first image': 'Genera la tua prima immagine'
+        'Generate your first image': 'Genera la tua prima immagine',
+        'You don\'t have enough credits': 'Non hai crediti sufficienti',
+        'Please enter an image description': 'Inserisci la descrizione dell\'immagine',
+        'Error generating image. Please try again': 'Errore durante la generazione dell\'immagine. Riprova',
+        'Image generated successfully': 'Immagine generata con successo',
+        'Error saving image. Please try again': 'Errore durante il salvataggio dell\'immagine. Riprova'
     },
     'de': {
         'Dashboard': 'Dashboard',
@@ -377,7 +397,12 @@ translations = {
         'There was an error!': 'Es ist ein Fehler aufgetreten!',
         'Generated at': 'Generiert am',
         'You have not generated any images yet.': 'Sie haben noch keine Bilder generiert.',
-        'Generate your first image': 'Generieren Sie Ihr erstes Bild'
+        'Generate your first image': 'Generieren Sie Ihr erstes Bild',
+        'You don\'t have enough credits': 'Sie haben nicht genügend Guthaben',
+        'Please enter an image description': 'Bitte geben Sie eine Bildbeschreibung ein',
+        'Error generating image. Please try again': 'Fehler beim Generieren des Bildes. Bitte versuchen Sie es erneut',
+        'Image generated successfully': 'Bild erfolgreich generiert',
+        'Error saving image. Please try again': 'Fehler beim Speichern des Bildes. Bitte versuchen Sie es erneut'
     },
     'ja': {
         'Dashboard': 'ダッシュボード',
@@ -453,7 +478,12 @@ translations = {
         'There was an error!': 'エラーが発生しました！',
         'Generated at': '生成日時',
         'You have not generated any images yet.': 'まだ画像を生成していません。',
-        'Generate your first image': '最初の画像を生成'
+        'Generate your first image': '最初の画像を生成',
+        'You don\'t have enough credits': 'クレジットが不足しています',
+        'Please enter an image description': '画像の説明を入力してください',
+        'Error generating image. Please try again': '画像の生成中にエラーが発生しました。もう一度お試しください',
+        'Image generated successfully': '画像が正常に生成されました',
+        'Error saving image. Please try again': '画像の保存中にエラーが発生しました。もう一度お試しください'
     },
     'fr': {
         'Dashboard': 'Tableau de bord',
@@ -495,7 +525,7 @@ translations = {
         'Precise Pixels': 'Pixels précis',
         'Limited Colors': 'Couleurs limitées',
         'Simple Design': 'Design simple',
-        'Clean Lines': 'Lignes propres',
+        'Clean Lines': 'Lignes Pulites',
         'Negative Space': 'Espace négatif',
         '3D Effects': 'Effets 3D',
         'Shadows': 'Ombres',
@@ -508,7 +538,7 @@ translations = {
         'Generate 3D images with render quality': 'Générez des images 3D avec une qualité de rendu',
         'Image Generation': 'Génération d\'image',
         'Enter description of the image you want': 'Entrez la description de l\'image que vous souhaitez',
-        'Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset': 'Décrivez l\'image que vous souhaitez générer... Exemple : Palais persan avec coupole turque au coucher du soleil',
+        'Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset': 'Décrivez l\'image que vous souhaitez générer... Exemple : Palais persan avec cupole turque au coucher du soleil',
         'Select Model': 'Sélectionner le modèle',
         'Generate Image (1 Credit)': 'Générer l\'image (1 crédit)',
         'Watch Ad for 3 Credits': 'Regarder l\'annonce pour 3 crédits',
@@ -520,16 +550,21 @@ translations = {
         'seconds': 'secondes',
         'Please wait...': 'Veuillez patienter...',
         'Close': 'Fermer',
-        'Please enter image description': 'Veuillez entrer la description de l\'image',
+        'Please enter image description': 'Veuillez entrer la description de l\'immagine',
         'Generating...': 'Génération en cours...',
-        'Error generating image: ': 'Erreur lors de la génération de l\'image : ',
+        'Error generating image: ': 'Erreur lors de la génération de l\'immagine : ',
         'Error: Image ID not found': 'Erreur : ID de l\'image non trouvé',
         'Network response was not ok': 'Réponse réseau non valide',
         'Error downloading image. Please try again.': 'Erreur de téléchargement de l\'image. Veuillez réessayer.',
         'There was an error!': 'Il y a eu une erreur !',
         'Generated at': 'Généré le',
         'You have not generated any images yet.': 'Vous n\'avez pas encore généré d\'images.',
-        'Generate your first image': 'Générer votre première image'
+        'Generate your first image': 'Générer votre première image',
+        'You don\'t have enough credits': 'Vous n\'avez pas assez de crédits',
+        'Please enter an image description': 'Veuillez entrer une description de l\'immagine',
+        'Error generating image. Please try again': 'Erreur lors de la génération de l\'immagine. Veuillez réessayer',
+        'Image generated successfully': 'Image générée avec succès',
+        'Error saving image. Please try again': 'Erreur lors de la sauvegarde de l\'immagine. Veuillez réessayer'
     },
     'hi': {
         'Dashboard': 'डैशबोर्ड',
@@ -587,7 +622,7 @@ translations = {
         'Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset': 'आप किस छवि उत्पन्न करना चाहते हैं... उदाहरण: दोपहर के दोपहर में टर्कुज़ी डोम के साथ पेर्सियन विलास',
         'Select Model': 'मॉडल चुनें',
         'Generate Image (1 Credit)': 'छवि उत्पन्न करें (1 क्रेडिट)',
-        'Watch Ad for 3 Credits': '3 क्रेडिट के लिए विज्ञापन देखें',
+        'Watch Ad for 3 Credits': '3 Kredit के लिए विज्ञापन देखें',
         'Generated Image': 'उत्पन्न छवि',
         'Download': 'डाउनलोड',
         'Watch Ad': 'विज्ञापन देखें',
@@ -605,7 +640,12 @@ translations = {
         'There was an error!': 'एक त्रुटि हुई थी!',
         'Generated at': 'उत्पन्न किया गया',
         'You have not generated any images yet.': 'आपने अभी तक कोई छवि नहीं बनाई है।',
-        'Generate your first image': 'अपनी पहली छवि बनाएं'
+        'Generate your first image': 'अपनी पहली छवि बनाएं',
+        'You don\'t have enough credits': 'आपके पास पर्याप्त क्रेडिट नहीं हैं',
+        'Please enter an image description': 'कृपया छवि का विवरण दर्ज करें',
+        'Error generating image. Please try again': 'छवि उत्पन्न करने में त्रुटि। कृपया पुनः प्रयास करें',
+        'Image generated successfully': 'छवि सफलतापूर्वक उत्पन्न की गई',
+        'Error saving image. Please try again': 'छवि सहेजने में त्रुटि। कृपया पुनः प्रयास करें'
     },
     'ru': {
         'Dashboard': 'Панель управления',
@@ -681,7 +721,12 @@ translations = {
         'There was an error!': 'Произошла ошибка!',
         'Generated at': 'Сгенерировано',
         'You have not generated any images yet.': 'Вы еще не сгенерировали ни одного изображения.',
-        'Generate your first image': 'Сгенерировать ваше первое изображение'
+        'Generate your first image': 'Сгенерировать ваше первое изображение',
+        'You don\'t have enough credits': 'У вас недостаточно кредитов',
+        'Please enter an image description': 'Пожалуйста, введите описание изображения',
+        'Error generating image. Please try again': 'Ошибка при создании изображения. Пожалуйста, попробуйте еще раз',
+        'Image generated successfully': 'Изображение успешно создано',
+        'Error saving image. Please try again': 'Ошибка при сохранении изображения. Пожалуйста, попробуйте еще раз'
     },
     'tr': {
         'Dashboard': 'Kontrol Paneli',
@@ -757,7 +802,12 @@ translations = {
         'There was an error!': 'Bir hata oluştu!',
         'Generated at': 'Oluşturulma tarihi',
         'You have not generated any images yet.': 'Henüz hiç görsel oluşturmadınız.',
-        'Generate your first image': 'İlk görselinizi oluşturun'
+        'Generate your first image': 'İlk görselinizi oluşturun',
+        'You don\'t have enough credits': 'Yeterli krediniz yok',
+        'Please enter an image description': 'Lütfen görsel açıklaması girin',
+        'Error generating image. Please try again': 'Görsel oluşturulurken hata oluştu. Lütfen tekrar deneyin',
+        'Image generated successfully': 'Görsel başarıyla oluşturuldu',
+        'Error saving image. Please try again': 'Görsel kaydedilirken hata oluştu. Lütfen tekrar deneyin'
     },
     'az': {
         'Dashboard': 'İdarə Paneli',
@@ -833,7 +883,12 @@ translations = {
         'There was an error!': 'Xəta baş verdi!',
         'Generated at': 'Yaradılma tarixi',
         'You have not generated any images yet.': 'Hələ heç bir şəkil yaratmamısınız.',
-        'Generate your first image': 'İlk şəklinizi yaradın'
+        'Generate your first image': 'İlk şəklinizi yaradın',
+        'You don\'t have enough credits': 'Kifayət qədər kreditiniz yoxdur',
+        'Please enter an image description': 'Zəhmət olmasa şəkil təsvirini daxil edin',
+        'Error generating image. Please try again': 'Şəkil yaradılarkən xəta baş verdi. Zəhmət olmasa yenidən cəhd edin',
+        'Image generated successfully': 'Şəkil uğurla yaradıldı',
+        'Error saving image. Please try again': 'Şəkil yadda saxlanılarkən xəta baş verdi. Zəhmət olmasa yenidən cəhd edin'
     },
     'id': {
         'Dashboard': 'Dasbor',
@@ -909,6 +964,11 @@ translations = {
         'There was an error!': 'Terjadi kesalahan!',
         'Generated at': 'Dibuat pada',
         'You have not generated any images yet.': 'Anda belum menghasilkan gambar apapun.',
-        'Generate your first image': 'Buat gambar pertama Anda'
+        'Generate your first image': 'Buat gambar pertama Anda',
+        'You don\'t have enough credits': 'Kredit Anda tidak mencukupi',
+        'Please enter an image description': 'Silakan masukkan deskripsi gambar',
+        'Error generating image. Please try again': 'Kesalahan saat menghasilkan gambar. Silakan coba lagi',
+        'Image generated successfully': 'Gambar berhasil dihasilkan',
+        'Error saving image. Please try again': 'Kesalahan saat menyimpan gambar. Silakan coba lagi'
     }
 } 
