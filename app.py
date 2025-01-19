@@ -140,8 +140,16 @@ class User(UserMixin, db.Model):
     profile_pic = db.Column(db.String(100))
     credits = db.Column(db.Integer, default=10)
     images = db.relationship('Image', backref='user', lazy=True)
-    subscription = db.relationship('Subscription', backref='user', uselist=False)
-    is_vip = db.Column(db.Boolean, default=False)
+    subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'), nullable=True)
+    subscription_end_date = db.Column(db.DateTime, nullable=True)
+
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    monthly_credits = db.Column(db.Integer, default=0)
+    no_ads = db.Column(db.Boolean, default=False)
+    users = db.relationship('User', backref='subscription', lazy=True)
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -149,14 +157,6 @@ class Image(db.Model):
     image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-class Subscription(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    plan_type = db.Column(db.String(20), nullable=False)  # 'basic' or 'premium'
-    start_date = db.Column(db.DateTime, default=datetime.utcnow)
-    end_date = db.Column(db.DateTime)
-    active = db.Column(db.Boolean, default=True)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -522,8 +522,7 @@ def callback():
                         email=users_email,
                         name=users_name,
                         profile_pic=picture,
-                        credits=5,
-                        is_vip=False  # Add default value for new field
+                        credits=5
                     )
                     db.session.add(user)
                     db.session.commit()
@@ -609,53 +608,6 @@ def images():
     user_images = Image.query.filter_by(user_id=current_user.id).order_by(Image.created_at.desc()).all()
     return render_template('images.html', images=user_images)
 
-@app.route('/subscribe', methods=['GET', 'POST'])
-@login_required
-def subscribe():
-    if request.method == 'POST':
-        plan_type = request.form.get('plan')
-        if plan_type not in ['basic', 'premium']:
-            flash('Invalid subscription plan')
-            return redirect(url_for('subscribe'))
-        
-        # Here you would integrate with a payment processor like Stripe
-        # For now, we'll just create the subscription
-        
-        # Cancel any existing subscription
-        if current_user.subscription:
-            current_user.subscription.active = False
-            
-        # Create new subscription
-        end_date = datetime.utcnow() + timedelta(days=30)
-        subscription = Subscription(
-            user_id=current_user.id,
-            plan_type=plan_type,
-            end_date=end_date,
-            active=True
-        )
-        
-        current_user.is_vip = True
-        if plan_type == 'premium':
-            current_user.credits += 100
-        
-        db.session.add(subscription)
-        db.session.commit()
-        
-        flash(f'Successfully subscribed to {plan_type} plan!')
-        return redirect(url_for('dashboard'))
-    
-    return render_template('subscribe.html')
-
-@app.route('/check-subscription')
-@login_required
-def check_subscription():
-    if current_user.subscription and current_user.subscription.active:
-        if current_user.subscription.end_date < datetime.utcnow():
-            current_user.subscription.active = False
-            current_user.is_vip = False
-            db.session.commit()
-    return redirect(url_for('dashboard'))
-
 @app.route('/download-image/<int:image_id>')
 @login_required
 def download_image(image_id):
@@ -710,6 +662,30 @@ def serve_image(image_id):
     except Exception as e:
         app.logger.error(f"Error serving image: {str(e)}")
         return "Error serving image", 500
+
+@app.route('/subscribe/<int:plan_id>', methods=['POST'])
+@login_required
+def subscribe(plan_id):
+    # In a real application, this would integrate with a payment processor
+    # For now, we'll just update the subscription
+    subscription = Subscription.query.get_or_404(plan_id)
+    current_user.subscription = subscription
+    current_user.subscription_end_date = datetime.utcnow().replace(day=1) + timedelta(days=32)  # Set to end of next month
+    if subscription.monthly_credits > 0:
+        current_user.credits += subscription.monthly_credits
+    db.session.commit()
+    flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
+    return redirect(url_for('dashboard'))
+
+@app.before_first_request
+def create_subscription_plans():
+    # Create subscription plans if they don't exist
+    if not Subscription.query.first():
+        basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=0, no_ads=True)
+        premium = Subscription(name='Premium VIP', price=10.0, monthly_credits=100, no_ads=True)
+        db.session.add(basic)
+        db.session.add(premium)
+        db.session.commit()
 
 if __name__ == '__main__':
     with app.app_context():
