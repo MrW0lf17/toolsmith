@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Choose Your Plan') }}</h1>
+    
+    <div class="row justify-content-center">
+        <!-- Free Tier -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-header bg-gray-700 text-white text-center py-4">
+                    <h3 class="my-0">{{ _('Free') }}</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title pricing-card-title">
+                            $0<small class="text-muted">/{{ _('forever') }}</small>
+                        </h2>
+                    </div>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('5 Free Credits Monthly') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Access to All Models') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('High-Quality Generation') }}
+                        </li>
+                        <li class="mb-3 text-muted">
+                            <i class="fas fa-times text-danger me-2"></i>
+                            {{ _('Contains Ads') }}
+                        </li>
+                    </ul>
+                    <div class="mt-auto">
+                        <button class="btn btn-lg btn-outline-secondary w-100" disabled>
+                            {{ _('Current Plan') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic VIP Plan -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="my-0">{{ _('Basic VIP') }}</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title pricing-card-title">
+                            $5<small class="text-muted">/{{ _('month') }}</small>
+                        </h2>
+                    </div>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('No Ads') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('10 Credits Monthly') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Priority Support') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Fast Generation Speed') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('All Image Models') }}
+                        </li>
+                    </ul>
+                    <div class="mt-auto">
+                        <form action="{{ url_for('subscribe', plan_id=1) }}" method="post" class="text-center">
+                            <button type="submit" class="btn btn-lg btn-outline-primary w-100">
+                                {{ _('Subscribe') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium VIP Plan -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow hover-shadow border-primary">
+                <div class="card-header bg-gradient text-white text-center py-4" style="background: linear-gradient(45deg, #007bff, #6610f2);">
+                    <h3 class="my-0">{{ _('Premium VIP') }}</h3>
+                    <span class="badge bg-warning text-dark mt-2">{{ _('Most Popular') }}</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title pricing-card-title">
+                            $10<small class="text-muted">/{{ _('month') }}</small>
+                        </h2>
+                    </div>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('No Ads') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('100 Monthly Credits') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Priority Support 24/7') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Ultra-Fast Generation') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('All Image Models') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Early Access to New Features') }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ _('Unlimited Image Storage') }}
+                        </li>
+                    </ul>
+                    <div class="mt-auto">
+                        <form action="{{ url_for('subscribe', plan_id=2) }}" method="post" class="text-center">
+                            <button type="submit" class="btn btn-lg btn-primary w-100">
+                                {{ _('Subscribe Now') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.bg-gradient {
+    background: linear-gradient(45deg, #007bff, #6610f2);
+}
+
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+.btn {
+    border-radius: 30px;
+    padding: 12px 30px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.list-unstyled li {
+    display: flex;
+    align-items: center;
+}
+
+.list-unstyled li i {
+    width: 20px;
+    text-align: center;
+}
+</style>
+{% endblock %} 

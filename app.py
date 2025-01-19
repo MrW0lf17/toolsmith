@@ -150,8 +150,10 @@ def create_subscription_plans():
     """Create initial subscription plans if they don't exist"""
     try:
         if not Subscription.query.first():
-            basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=0, no_ads=True)
+            free = Subscription(name='Free', price=0.0, monthly_credits=5, no_ads=False)
+            basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=10, no_ads=True)
             premium = Subscription(name='Premium VIP', price=10.0, monthly_credits=100, no_ads=True)
+            db.session.add(free)
             db.session.add(basic)
             db.session.add(premium)
             db.session.commit()
@@ -590,6 +592,11 @@ def logout():
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+@app.route('/subscriptions')
+@login_required
+def subscriptions():
+    return render_template('subscriptions.html')
 
 @app.route('/generate', methods=['POST'])
 @login_required
