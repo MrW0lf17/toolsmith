@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from oauthlib.oauth2 import WebApplicationClient
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from io import BytesIO
 import logging
@@ -140,6 +140,8 @@ class User(UserMixin, db.Model):
     profile_pic = db.Column(db.String(100))
     credits = db.Column(db.Integer, default=10)
     images = db.relationship('Image', backref='user', lazy=True)
+    subscription = db.relationship('Subscription', backref='user', uselist=False)
+    is_vip = db.Column(db.Boolean, default=False)
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -147,6 +149,14 @@ class Image(db.Model):
     image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    plan_type = db.Column(db.String(20), nullable=False)  # 'basic' or 'premium'
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime)
+    active = db.Column(db.Boolean, default=True)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -597,6 +607,53 @@ def add_credits():
 def images():
     user_images = Image.query.filter_by(user_id=current_user.id).order_by(Image.created_at.desc()).all()
     return render_template('images.html', images=user_images)
+
+@app.route('/subscribe', methods=['GET', 'POST'])
+@login_required
+def subscribe():
+    if request.method == 'POST':
+        plan_type = request.form.get('plan')
+        if plan_type not in ['basic', 'premium']:
+            flash('Invalid subscription plan')
+            return redirect(url_for('subscribe'))
+        
+        # Here you would integrate with a payment processor like Stripe
+        # For now, we'll just create the subscription
+        
+        # Cancel any existing subscription
+        if current_user.subscription:
+            current_user.subscription.active = False
+            
+        # Create new subscription
+        end_date = datetime.utcnow() + timedelta(days=30)
+        subscription = Subscription(
+            user_id=current_user.id,
+            plan_type=plan_type,
+            end_date=end_date,
+            active=True
+        )
+        
+        current_user.is_vip = True
+        if plan_type == 'premium':
+            current_user.credits += 100
+        
+        db.session.add(subscription)
+        db.session.commit()
+        
+        flash(f'Successfully subscribed to {plan_type} plan!')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('subscribe.html')
+
+@app.route('/check-subscription')
+@login_required
+def check_subscription():
+    if current_user.subscription and current_user.subscription.active:
+        if current_user.subscription.end_date < datetime.utcnow():
+            current_user.subscription.active = False
+            current_user.is_vip = False
+            db.session.commit()
+    return redirect(url_for('dashboard'))
 
 @app.route('/download-image/<int:image_id>')
 @login_required

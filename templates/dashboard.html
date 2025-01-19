@@ -1,117 +1,154 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4">
-    <!-- Top Banner Ad -->
-    <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="your-client-id"
-             data-ad-slot="your-banner-slot"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-    </div>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Profile</h5>
+                    <img src="{{ current_user.profile_pic }}" alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="max-width: 100px;">
+                    <p class="card-text">{{ current_user.name }}</p>
+                    <p class="card-text">{{ current_user.email }}</p>
+                </div>
+            </div>
 
-    <!-- Left Sidebar Ad (on larger screens) -->
-    <div class="hidden lg:block fixed left-4 top-24 w-[160px]">
-        <ins class="adsbygoogle"
-             style="display:inline-block;width:160px;height:600px"
-             data-ad-client="your-client-id"
-             data-ad-slot="your-vertical-slot"></ins>
-    </div>
-
-    <!-- Right Sidebar Ad (on larger screens) -->
-    <div class="hidden lg:block fixed right-4 top-24 w-[160px]">
-        <ins class="adsbygoogle"
-             style="display:inline-block;width:160px;height:600px"
-             data-ad-client="your-client-id"
-             data-ad-slot="your-vertical-slot"></ins>
-    </div>
-
-    <div class="persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
-        <div class="flex items-center mb-4 sm:mb-6">
-            <h2 class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Image Generation') }}</h2>
-        </div>
-        
-        <!-- In-feed Ad -->
-        <div class="mb-6 overflow-hidden rounded-lg">
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-format="fluid"
-                 data-ad-layout-key="-fb+5w+4e-db+86"
-                 data-ad-client="your-client-id"
-                 data-ad-slot="your-infeed-slot"></ins>
-        </div>
-        
-        <div class="mb-4 sm:mb-6">
-            <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Enter description of the image you want') }}</label>
-            <textarea id="prompt" rows="3"
-                      class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 placeholder-gray-500"
-                      placeholder="{{ _('Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset') }}"></textarea>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Account Status</h5>
+                    <p class="card-text">Credits: {{ current_user.credits }}</p>
+                    {% if current_user.is_vip %}
+                        {% if current_user.subscription.plan_type == 'premium' %}
+                            <div class="alert alert-warning">
+                                <strong>Premium VIP Member</strong>
+                                <p class="mb-0">Expires: {{ current_user.subscription.end_date.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-primary">
+                                <strong>Basic VIP Member</strong>
+                                <p class="mb-0">Expires: {{ current_user.subscription.end_date.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('subscribe') }}" class="btn btn-primary">Upgrade to VIP</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <!-- Model Selection -->
-        <div class="mb-4 sm:mb-6">
-            <label for="model" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Select Model') }}</label>
-            <select id="model" 
-                    class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
-                <option value="realistic">{{ _('Realistic') }}</option>
-                <option value="anime">{{ _('Anime') }}</option>
-                <option value="painting">{{ _('Painting') }}</option>
-                <option value="pixel">{{ _('Pixel Art') }}</option>
-                <option value="minimal">{{ _('Minimal') }}</option>
-                <option value="3d">{{ _('3D Render') }}</option>
-            </select>
-        </div>
-        
-        <div class="flex flex-col sm:flex-row items-center gap-3 sm:justify-between">
-            <button id="generate-btn" onclick="generateImage()"
-                    class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-purple-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
-                <img src="https://img.icons8.com/?size=100&id=AJVL9BlUfVWD&format=png&color=000000" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
-                {{ _('Generate Image (1 Credit)') }}
-            </button>
-            <button id="add-credits-btn" onclick="watchAd()"
-                    class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
-                <img src="https://img.icons8.com/color/24/video-playlist.png" alt="Video" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
-                {{ _('Watch Ad for 3 Credits') }}
-            </button>
-        </div>
-    </div>
+        <div class="col-md-8">
+            <!-- Top Banner Ad -->
+            <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="your-client-id"
+                     data-ad-slot="your-banner-slot"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
 
-    <!-- Mid-page Banner Ad -->
-    <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="your-client-id"
-             data-ad-slot="your-banner-slot"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-    </div>
+            <!-- Left Sidebar Ad (on larger screens) -->
+            <div class="hidden lg:block fixed left-4 top-24 w-[160px]">
+                <ins class="adsbygoogle"
+                     style="display:inline-block;width:160px;height:600px"
+                     data-ad-client="your-client-id"
+                     data-ad-slot="your-vertical-slot"></ins>
+            </div>
 
-    <!-- Generated image display -->
-    <div id="result" class="hidden persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
-        <div class="flex items-center mb-3 sm:mb-4">
-            <img src="https://img.icons8.com/?size=100&id=57212&format=png&color=000000" alt="Gallery" class="ml-2 sm:ml-4 w-8 h-8 sm:w-12 sm:h-12">
-            <h3 class="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Generated Image') }}</h3>
-        </div>
-        <div class="relative">
-            <img id="generated-image" src="" alt="{{ _('Generated Image') }}" class="w-full rounded-lg shadow-2xl">
-            <button onclick="downloadImage()"
-                    class="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
-                <img src="https://img.icons8.com/color/24/download--v1.png" alt="Download" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
-                {{ _('Download') }}
-            </button>
-        </div>
-    </div>
+            <!-- Right Sidebar Ad (on larger screens) -->
+            <div class="hidden lg:block fixed right-4 top-24 w-[160px]">
+                <ins class="adsbygoogle"
+                     style="display:inline-block;width:160px;height:600px"
+                     data-ad-client="your-client-id"
+                     data-ad-slot="your-vertical-slot"></ins>
+            </div>
 
-    <!-- Bottom Banner Ad -->
-    <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="your-client-id"
-             data-ad-slot="your-banner-slot"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
+            <div class="persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
+                <div class="flex items-center mb-4 sm:mb-6">
+                    <h2 class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Image Generation') }}</h2>
+                </div>
+                
+                <!-- In-feed Ad -->
+                <div class="mb-6 overflow-hidden rounded-lg">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-format="fluid"
+                         data-ad-layout-key="-fb+5w+4e-db+86"
+                         data-ad-client="your-client-id"
+                         data-ad-slot="your-infeed-slot"></ins>
+                </div>
+                
+                <div class="mb-4 sm:mb-6">
+                    <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Enter description of the image you want') }}</label>
+                    <textarea id="prompt" rows="3"
+                              class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 placeholder-gray-500"
+                              placeholder="{{ _('Describe the image you want to generate... Example: A Persian palace with turquoise dome at sunset') }}"></textarea>
+                </div>
+
+                <!-- Model Selection -->
+                <div class="mb-4 sm:mb-6">
+                    <label for="model" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Select Model') }}</label>
+                    <select id="model" 
+                            class="w-full bg-gray-800 border border-purple-900 rounded-lg py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base text-gray-200 leading-tight focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                        <option value="realistic">{{ _('Realistic') }}</option>
+                        <option value="anime">{{ _('Anime') }}</option>
+                        <option value="painting">{{ _('Painting') }}</option>
+                        <option value="pixel">{{ _('Pixel Art') }}</option>
+                        <option value="minimal">{{ _('Minimal') }}</option>
+                        <option value="3d">{{ _('3D Render') }}</option>
+                    </select>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-3 sm:justify-between">
+                    <button id="generate-btn" onclick="generateImage()"
+                            class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-purple-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
+                        <img src="https://img.icons8.com/?size=100&id=AJVL9BlUfVWD&format=png&color=000000" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
+                        {{ _('Generate Image (1 Credit)') }}
+                    </button>
+                    <button id="add-credits-btn" onclick="watchAd()"
+                            class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
+                        <img src="https://img.icons8.com/color/24/video-playlist.png" alt="Video" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
+                        {{ _('Watch Ad for 3 Credits') }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mid-page Banner Ad -->
+            <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="your-client-id"
+                     data-ad-slot="your-banner-slot"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
+
+            <!-- Generated image display -->
+            <div id="result" class="hidden persian-pattern rounded-xl shadow-xl border border-purple-900 p-4 sm:p-8 mb-4 sm:mb-8">
+                <div class="flex items-center mb-3 sm:mb-4">
+                    <img src="https://img.icons8.com/?size=100&id=57212&format=png&color=000000" alt="Gallery" class="ml-2 sm:ml-4 w-8 h-8 sm:w-12 sm:h-12">
+                    <h3 class="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Generated Image') }}</h3>
+                </div>
+                <div class="relative">
+                    <img id="generated-image" src="" alt="{{ _('Generated Image') }}" class="w-full rounded-lg shadow-2xl">
+                    <button onclick="downloadImage()"
+                            class="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
+                        <img src="https://img.icons8.com/color/24/download--v1.png" alt="Download" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
+                        {{ _('Download') }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Banner Ad -->
+            <div class="mb-6 overflow-hidden rounded-xl shadow-lg">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="your-client-id"
+                     data-ad-slot="your-banner-slot"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
+        </div>
     </div>
 </div>
 
