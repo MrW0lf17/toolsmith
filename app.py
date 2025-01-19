@@ -602,15 +602,15 @@ def subscriptions():
 @login_required
 def generate():
     if current_user.credits <= 0:
-        return jsonify({'error': translate_to_persian("You don't have enough credits")}), 400
+        return jsonify({'error': _("You don't have enough credits")}), 400
     
     prompt = request.form.get('prompt')
     if not prompt:
-        return jsonify({'error': translate_to_persian("Please enter an image description")}), 400
+        return jsonify({'error': _("Please enter an image description")}), 400
     
     image_url = generate_image(prompt)
     if not image_url:
-        return jsonify({'error': translate_to_persian("Error generating image. Please try again")}), 500
+        return jsonify({'error': _("Error generating image. Please try again")}), 500
     
     try:
         # Create new image record
@@ -625,12 +625,12 @@ def generate():
             'image_url': image_url,
             'image_id': image.id,
             'credits_remaining': current_user.credits,
-            'message': translate_to_persian("Image generated successfully")
+            'message': _("Image generated successfully")
         })
     except Exception as e:
         app.logger.error(f"Database error: {str(e)}")
         db.session.rollback()
-        return jsonify({'error': translate_to_persian("Error saving image. Please try again")}), 500
+        return jsonify({'error': _("Error saving image. Please try again")}), 500
 
 @app.route('/add_credits', methods=['POST'])
 @login_required
