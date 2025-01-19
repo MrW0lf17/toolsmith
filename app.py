@@ -111,6 +111,15 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Initialize subscription plans
+with app.app_context():
+    try:
+        db.create_all()
+        create_subscription_plans()
+        app.logger.info("Database tables and subscription plans initialized")
+    except Exception as e:
+        app.logger.error(f"Error initializing database: {e}")
+
 # Initialize OAuth properly
 client = None
 
@@ -677,9 +686,8 @@ def subscribe(plan_id):
     flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
     return redirect(url_for('dashboard'))
 
-@app.before_first_request
 def create_subscription_plans():
-    # Create subscription plans if they don't exist
+    """Create initial subscription plans if they don't exist"""
     if not Subscription.query.first():
         basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=0, no_ads=True)
         premium = Subscription(name='Premium VIP', price=10.0, monthly_credits=100, no_ads=True)
@@ -691,7 +699,8 @@ if __name__ == '__main__':
     with app.app_context():
         try:
             db.create_all()
-            app.logger.info("Database tables created successfully")
+            create_subscription_plans()  # Initialize subscription plans
+            app.logger.info("Database tables and subscription plans created successfully")
         except Exception as e:
             app.logger.error(f"Error creating database tables: {e}")
             sys.exit(1)
