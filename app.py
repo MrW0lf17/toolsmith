@@ -15,9 +15,8 @@ import sys
 from urllib.parse import urljoin
 from translations import translations
 from sqlalchemy.exc import SQLAlchemyError
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+import base64
+from requests_toolbelt import MultipartEncoder
 
 # Load environment variables
 load_dotenv()
@@ -106,6 +105,10 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     app.logger.error("Google OAuth credentials not configured!")
 
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+
+# ImgBB API Configuration
+IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', 'YOUR_IMGBB_API_KEY')  # Replace with your ImgBB API key
+IMGBB_API_URL = 'https://api.imgbb.com/1/upload'
 
 # Function to get base URL
 def get_base_url():
@@ -403,7 +406,7 @@ def translate_to_english(text: str) -> str:
         return text
 
 def generate_image(prompt: str, model: str = 'realistic') -> tuple:
-    """Generate an image using the API and save it to Cloudinary"""
+    """Generate an image using the API and save it to ImgBB"""
     if not API_KEY:
         app.logger.error("API key not configured")
         return None, "API key not configured"
@@ -463,20 +466,33 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         if not img_response.ok:
             return None, "Failed to download generated image"
 
-        # Upload to Cloudinary
-        upload_result = cloudinary.uploader.upload(
-            BytesIO(img_response.content),
-            folder="generated_images",
-            resource_type="image",
-            format="jpg",
-            transformation=[
-                {"quality": "auto:good"},
-                {"fetch_format": "auto"}
-            ]
-        )
+        # Upload to ImgBB
+        try:
+            # Convert image to base64
+            image_data = base64.b64encode(img_response.content).decode('utf-8')
+            
+            # Prepare the payload for ImgBB
+            data = {
+                'key': IMGBB_API_KEY,
+                'image': image_data,
+                'expiration': 2592000,  # 30 days in seconds
+                'name': f'generated_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}'
+            }
+            
+            # Upload to ImgBB
+            imgbb_response = requests.post(IMGBB_API_URL, data=data, timeout=30)
+            imgbb_response.raise_for_status()
+            imgbb_data = imgbb_response.json()
+            
+            if not imgbb_data.get('success'):
+                raise Exception("ImgBB upload failed")
+            
+            # Return the ImgBB URL
+            return imgbb_data['data']['url'], None
 
-        # Return the Cloudinary URL
-        return upload_result['secure_url'], None
+        except Exception as e:
+            app.logger.error(f"ImgBB upload error: {str(e)}")
+            return None, "Failed to store generated image"
 
     except requests.exceptions.Timeout:
         return None, "Image generation timed out"
@@ -718,13 +734,9 @@ def download_image(image_id):
         return "Unauthorized", 403
     
     try:
-        # For Cloudinary URLs, we can redirect directly with download flag
-        if 'cloudinary' in image.image_url:
-            download_url = cloudinary.utils.cloudinary_url(
-                image.image_url.split('/')[-1],
-                format='jpg',
-                flags='attachment'
-            )[0]
+        # For ImgBB URLs, we can redirect directly with download flag
+        if 'imgbb' in image.image_url:
+            download_url = image.image_url
             return redirect(download_url)
             
         # For legacy URLs, download through our server
@@ -751,8 +763,8 @@ def serve_image(image_id):
         return "Unauthorized", 403
     
     try:
-        # For Cloudinary URLs, we can redirect directly
-        if 'cloudinary' in image.image_url:
+        # For ImgBB URLs, we can redirect directly
+        if 'imgbb' in image.image_url:
             return redirect(image.image_url)
             
         # For legacy URLs, try to serve them through our server
@@ -785,21 +797,6 @@ def subscribe(plan_id):
     flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
     return redirect(url_for('dashboard'))
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', 'toolsmith'),
-    api_key = os.environ.get('CLOUDINARY_API_KEY', '282311257619256'),
-    api_secret = os.environ.get('CLOUDINARY_API_SECRET', 'LhwZMqdaK3v7F7cKCXL8Xs2LCMs'),
-    secure = True
-)
-
-# Validate Cloudinary configuration
-try:
-    cloudinary.api.ping()
-    app.logger.info("Cloudinary configured successfully")
-except Exception as e:
-    app.logger.error(f"Cloudinary configuration error: {str(e)}")
-    
 if __name__ == '__main__':
     with app.app_context():
         try:
