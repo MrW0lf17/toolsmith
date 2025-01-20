@@ -16,6 +16,7 @@ from urllib.parse import urljoin
 from translations import translations
 from sqlalchemy.exc import SQLAlchemyError
 import stripe
+from sqlalchemy import inspect
 
 # Load environment variables
 load_dotenv()
@@ -194,88 +195,106 @@ def get_or_create_stripe_customer(user):
 def create_subscription_plans():
     """Create initial subscription plans if they don't exist"""
     try:
-        if not Subscription.query.first():
-            # Create Basic VIP Plan in Stripe
-            basic_product = stripe.Product.create(
-                name='Basic VIP',
-                description='Basic VIP subscription with 10 monthly credits'
-            )
-            basic_price = stripe.Price.create(
-                product=basic_product.id,
-                unit_amount=500,  # $5.00
-                currency='usd',
-                recurring={'interval': 'month'}
-            )
+        # First verify the table exists
+        inspector = inspect(db.engine)
+        if not inspector.has_table('subscription'):
+            app.logger.error("Subscription table does not exist!")
+            db.create_all()  # Recreate all tables if missing
             
-            # Create Premium VIP Plan in Stripe
-            premium_product = stripe.Product.create(
-                name='Premium VIP',
-                description='Premium VIP subscription with 100 monthly credits'
-            )
-            premium_price = stripe.Price.create(
-                product=premium_product.id,
-                unit_amount=1000,  # $10.00
-                currency='usd',
-                recurring={'interval': 'month'}
-            )
+        # Check if any subscriptions exist
+        existing_subs = Subscription.query.first()
+        if existing_subs:
+            app.logger.info("Subscription plans already exist")
+            return
             
-            # Create Free Plan (no Stripe product needed)
-            free = Subscription(
-                name='Free',
-                price=0.0,
-                monthly_credits=5,
-                no_ads=False,
-                features={
-                    'credits': 5,
-                    'ads': True,
-                    'support': 'Basic',
-                    'generation_speed': 'Normal'
-                }
-            )
-            
-            # Create Basic VIP Plan
-            basic = Subscription(
-                name='Basic VIP',
-                price=5.0,
-                monthly_credits=10,
-                no_ads=True,
-                stripe_product_id=basic_product.id,
-                stripe_price_id=basic_price.id,
-                features={
-                    'credits': 10,
-                    'ads': False,
-                    'support': 'Priority',
-                    'generation_speed': 'Fast',
-                    'video_ad_credits': True
-                }
-            )
-            
-            # Create Premium VIP Plan
-            premium = Subscription(
-                name='Premium VIP',
-                price=10.0,
-                monthly_credits=100,
-                no_ads=True,
-                stripe_product_id=premium_product.id,
-                stripe_price_id=premium_price.id,
-                features={
-                    'credits': 100,
-                    'ads': False,
-                    'support': '24/7 Priority',
-                    'generation_speed': 'Ultra-Fast',
-                    'storage': 'Unlimited',
-                    'early_access': True
-                }
-            )
-            
-            db.session.add(free)
-            db.session.add(basic)
-            db.session.add(premium)
-            db.session.commit()
-            app.logger.info("Subscription plans created successfully")
+        app.logger.info("Creating initial subscription plans...")
+        
+        # Create Basic VIP Plan in Stripe
+        basic_product = stripe.Product.create(
+            name='Basic VIP',
+            description='Basic VIP subscription with 10 monthly credits'
+        )
+        basic_price = stripe.Price.create(
+            product=basic_product.id,
+            unit_amount=500,  # $5.00
+            currency='usd',
+            recurring={'interval': 'month'}
+        )
+        
+        # Create Premium VIP Plan in Stripe
+        premium_product = stripe.Product.create(
+            name='Premium VIP',
+            description='Premium VIP subscription with 100 monthly credits'
+        )
+        premium_price = stripe.Price.create(
+            product=premium_product.id,
+            unit_amount=1000,  # $10.00
+            currency='usd',
+            recurring={'interval': 'month'}
+        )
+        
+        # Create Free Plan (no Stripe product needed)
+        free = Subscription(
+            name='Free',
+            price=0.0,
+            monthly_credits=5,
+            no_ads=False,
+            features={
+                'credits': 5,
+                'ads': True,
+                'support': 'Basic',
+                'generation_speed': 'Normal'
+            }
+        )
+        
+        # Create Basic VIP Plan
+        basic = Subscription(
+            name='Basic VIP',
+            price=5.0,
+            monthly_credits=10,
+            no_ads=True,
+            stripe_product_id=basic_product.id,
+            stripe_price_id=basic_price.id,
+            features={
+                'credits': 10,
+                'ads': False,
+                'support': 'Priority',
+                'generation_speed': 'Fast',
+                'video_ad_credits': True
+            }
+        )
+        
+        # Create Premium VIP Plan
+        premium = Subscription(
+            name='Premium VIP',
+            price=10.0,
+            monthly_credits=100,
+            no_ads=True,
+            stripe_product_id=premium_product.id,
+            stripe_price_id=premium_price.id,
+            features={
+                'credits': 100,
+                'ads': False,
+                'support': '24/7 Priority',
+                'generation_speed': 'Ultra-Fast',
+                'storage': 'Unlimited',
+                'early_access': True
+            }
+        )
+        
+        # Add all plans to session
+        db.session.add(free)
+        db.session.add(basic)
+        db.session.add(premium)
+        
+        # Commit transaction
+        db.session.commit()
+        app.logger.info("Subscription plans created successfully")
+        
     except Exception as e:
-        app.logger.error(f"Error creating subscription plans: {e}")
+        app.logger.error(f"Error creating subscription plans: {str(e)}")
         db.session.rollback()
+        # Re-raise the exception to be handled by the caller
         raise
 
 # Create all tables first, then initialize data
@@ -287,7 +306,7 @@ with app.app_context():
         # Initialize subscription plans
         create_subscription_plans()
     except Exception as e:
-        app.logger.error(f"Error initializing database: {e}")
+        app.logger.error(f"Error initializing database: {str(e)}")
         raise
 
 # Initialize OAuth properly
