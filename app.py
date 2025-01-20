@@ -15,8 +15,6 @@ import sys
 from urllib.parse import urljoin
 from translations import translations
 from sqlalchemy.exc import SQLAlchemyError
-import base64
-from requests_toolbelt import MultipartEncoder
 
 # Load environment variables
 load_dotenv()
@@ -105,10 +103,6 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     app.logger.error("Google OAuth credentials not configured!")
 
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
-
-# ImgBB API Configuration
-IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', 'YOUR_IMGBB_API_KEY')  # Replace with your ImgBB API key
-IMGBB_API_URL = 'https://api.imgbb.com/1/upload'
 
 # Function to get base URL
 def get_base_url():
@@ -406,23 +400,29 @@ def translate_to_english(text: str) -> str:
         return text
 
 def generate_image(prompt: str, model: str = 'realistic') -> tuple:
-    """Generate an image using the API and save it to ImgBB"""
+    """Generate image from prompt with improved error handling and validation"""
     if not API_KEY:
         app.logger.error("API key not configured")
-        return None, "API key not configured"
+        return None, "API configuration error"
+
+    # Validate prompt length
+    if len(prompt) > 500:
+        return None, "Prompt too long (maximum 500 characters)"
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": f"Bearer {API_KEY}"
     }
-
+    
+    # Model-specific prompt enhancements with safety checks
     model_prompts = {
-        'realistic': f"Create a photorealistic image of {prompt}. The image should be highly detailed and lifelike.",
-        'anime': f"Create an anime-style illustration of {prompt}. The image should have vibrant colors and distinctive anime characteristics.",
-        'painting': f"Create an artistic painting of {prompt}. The image should have visible brushstrokes and artistic interpretation.",
-        'pixel': f"Create a pixel art version of {prompt}. The image should have a retro, 8-bit style appearance.",
-        'minimal': f"Create a minimalist interpretation of {prompt}. The image should be clean, simple, and use minimal elements.",
-        '3d': f"Create a 3D rendered image of {prompt}. The image should have depth, lighting, and realistic textures."
+        'realistic': f"professional high-quality detailed photograph of {prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
+        'anime': f"high-quality anime illustration of {prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
+        'painting': f"artistic digital painting of {prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
+        'pixel': f"pixel art style {prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
+        'minimal': f"minimalist design of {prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
+        '3d': f"3D rendered scene of {prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
     }
     
     enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
@@ -439,6 +439,7 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     try:
         response = requests.post(API_URL, json=data, headers=headers, timeout=30)
         
+        # Log response details for debugging
         app.logger.info(f"API Response Status: {response.status_code}")
         app.logger.info(f"API Response Headers: {dict(response.headers)}")
         
@@ -460,39 +461,7 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         if not result['data'] or 'url' not in result['data'][0]:
             return None, "No image URL in response"
 
-        # Download the image from the temporary URL
-        temp_image_url = result['data'][0]['url']
-        img_response = requests.get(temp_image_url, timeout=30)
-        if not img_response.ok:
-            return None, "Failed to download generated image"
-
-        # Upload to ImgBB
-        try:
-            # Convert image to base64
-            image_data = base64.b64encode(img_response.content).decode('utf-8')
-            
-            # Prepare the payload for ImgBB
-            data = {
-                'key': IMGBB_API_KEY,
-                'image': image_data,
-                'expiration': 2592000,  # 30 days in seconds
-                'name': f'generated_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}'
-            }
-            
-            # Upload to ImgBB
-            imgbb_response = requests.post(IMGBB_API_URL, data=data, timeout=30)
-            imgbb_response.raise_for_status()
-            imgbb_data = imgbb_response.json()
-            
-            if not imgbb_data.get('success'):
-                raise Exception("ImgBB upload failed")
-            
-            # Return the ImgBB URL
-            return imgbb_data['data']['url'], None
-
-        except Exception as e:
-            app.logger.error(f"ImgBB upload error: {str(e)}")
-            return None, "Failed to store generated image"
+        return result['data'][0]['url'], None
 
     except requests.exceptions.Timeout:
         return None, "Image generation timed out"
@@ -734,17 +703,16 @@ def download_image(image_id):
         return "Unauthorized", 403
     
     try:
-        # For ImgBB URLs, we can redirect directly with download flag
-        if 'imgbb' in image.image_url:
-            download_url = image.image_url
-            return redirect(download_url)
-            
-        # For legacy URLs, download through our server
+        # Download the image from the URL
         response = requests.get(image.image_url, timeout=10)
         response.raise_for_status()
         
+        # Create a BytesIO object from the image data
+        image_data = BytesIO(response.content)
+        
+        # Use 'application/octet-stream' to enforce download
         return send_file(
-            BytesIO(response.content),
+            image_data,
             mimetype='application/octet-stream',
             as_attachment=True,
             download_name=f'generated-image-{image.id}.jpeg'
@@ -763,14 +731,11 @@ def serve_image(image_id):
         return "Unauthorized", 403
     
     try:
-        # For ImgBB URLs, we can redirect directly
-        if 'imgbb' in image.image_url:
-            return redirect(image.image_url)
-            
-        # For legacy URLs, try to serve them through our server
+        # Download the image from the URL
         response = requests.get(image.image_url, timeout=10)
         response.raise_for_status()
         
+        # Serve the image with caching headers
         return Response(
             response.content,
             mimetype='image/jpeg',
