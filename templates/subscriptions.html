@@ -4,6 +4,9 @@
 <div class="container py-5">
     <h1 class="text-center mb-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Choose Your Plan') }}</h1>
     
+    <!-- Stripe Elements -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
     <div class="row justify-content-center">
         <!-- Free Tier -->
         <div class="col-md-4 mb-4">
@@ -83,11 +86,21 @@
                         </li>
                     </ul>
                     <div class="mt-auto">
-                        <form action="{{ url_for('subscribe', plan_id=1) }}" method="post" class="text-center">
-                            <button type="submit" class="btn btn-lg btn-outline-primary w-100">
+                        {% if current_user.subscription and current_user.subscription.name == 'Basic VIP' %}
+                            {% if current_user.subscription_status == 'canceled' %}
+                                <button class="btn btn-lg btn-outline-primary w-100" disabled>
+                                    {{ _('Cancellation Pending') }}
+                                </button>
+                            {% else %}
+                                <button onclick="cancelSubscription()" class="btn btn-lg btn-outline-danger w-100">
+                                    {{ _('Cancel Subscription') }}
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button onclick="subscribe(1)" class="btn btn-lg btn-outline-primary w-100">
                                 {{ _('Subscribe') }}
                             </button>
-                        </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -137,17 +150,90 @@
                         </li>
                     </ul>
                     <div class="mt-auto">
-                        <form action="{{ url_for('subscribe', plan_id=2) }}" method="post" class="text-center">
-                            <button type="submit" class="btn btn-lg btn-primary w-100">
+                        {% if current_user.subscription and current_user.subscription.name == 'Premium VIP' %}
+                            {% if current_user.subscription_status == 'canceled' %}
+                                <button class="btn btn-lg btn-primary w-100" disabled>
+                                    {{ _('Cancellation Pending') }}
+                                </button>
+                            {% else %}
+                                <button onclick="cancelSubscription()" class="btn btn-lg btn-outline-danger w-100">
+                                    {{ _('Cancel Subscription') }}
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button onclick="subscribe(2)" class="btn btn-lg btn-primary w-100">
                                 {{ _('Subscribe Now') }}
                             </button>
-                        </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+const stripe = Stripe('{{ stripe_public_key }}');
+
+async function subscribe(planId) {
+    try {
+        const response = await fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `plan_id=${planId}`
+        });
+        
+        const session = await response.json();
+        
+        if (session.error) {
+            showNotification(session.error, 'error');
+            return;
+        }
+        
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({
+            sessionId: session.sessionId
+        });
+        
+        if (result.error) {
+            showNotification(result.error.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification("{{ _('An error occurred. Please try again.') }}", 'error');
+    }
+}
+
+async function cancelSubscription() {
+    if (!confirm("{{ _('Are you sure you want to cancel your subscription?') }}")) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/cancel-subscription', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(result.error, 'error');
+            return;
+        }
+        
+        showNotification(result.message, 'success');
+        setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification("{{ _('An error occurred. Please try again.') }}", 'error');
+    }
+}
+</script>
 
 <style>
 .hover-shadow:hover {

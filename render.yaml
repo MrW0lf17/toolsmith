@@ -27,6 +27,12 @@ services:
         sync: false
       - key: FLUX_API_KEY
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLIC_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
     headers:
       - path: /*
         name: X-Frame-Options
@@ -43,3 +49,8 @@ databases:
     databaseName: toolsmith
     plan: free
     ipAllowList: [] # only allow internal connections 
+
+  - type: redis
+    name: toolsmith-redis
+    ipAllowList: []
+    plan: free 
