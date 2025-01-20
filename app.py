@@ -604,7 +604,6 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     }
     
     enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
-    app.logger.info(f"Final prompt: {enhanced_prompt}")
     
     data = {
         "model": "black-forest-labs/FLUX.1-schnell-Free",
@@ -794,22 +793,13 @@ def subscriptions():
 def generate():
     """Handle image generation request with improved error handling"""
     try:
-        # Get current language
-        current_lang = session.get('lang', 'fa')
-        
-        # Input validation with translated messages
+        # Input validation
         if current_user.credits <= 0:
-            error_msg = "You don't have enough credits"
-            if current_lang != 'en':
-                error_msg = translate_text(error_msg, current_lang)
-            return jsonify({'error': error_msg}), 400
+            return jsonify({'error': _("You don't have enough credits")}), 400
 
         prompt = request.form.get('prompt', '').strip()
         if not prompt:
-            error_msg = "Please enter an image description"
-            if current_lang != 'en':
-                error_msg = translate_text(error_msg, current_lang)
-            return jsonify({'error': error_msg}), 400
+            return jsonify({'error': _("Please enter an image description")}), 400
 
         model = request.form.get('model', 'realistic')
         if model not in ['realistic', 'anime', 'painting', 'pixel', 'minimal', '3d']:
@@ -820,19 +810,13 @@ def generate():
         
         # Handle rate limit error specifically
         if error == "RATE_LIMIT_ERROR":
-            error_msg = "Rate limit reached. Please try again in a few seconds"
-            if current_lang != 'en':
-                error_msg = translate_text(error_msg, current_lang)
             return jsonify({
-                'error': error_msg,
+                'error': _("Rate limit reached. Please try again in a few seconds"),
                 'retry': True
             }), 429
 
         if error:
-            base_error = "Error generating image"
-            if current_lang != 'en':
-                base_error = translate_text(base_error, current_lang)
-            return jsonify({'error': f"{base_error}: {error}"}), 500
+            return jsonify({'error': f"{_('Error generating image')}: {error}"}), 500
 
         # Database transaction with retry mechanism
         max_retries = 3
@@ -855,34 +839,24 @@ def generate():
                 # Commit transaction
                 db.session.commit()
                 
-                success_msg = "Image generated successfully"
-                if current_lang != 'en':
-                    success_msg = translate_text(success_msg, current_lang)
-                
                 return jsonify({
                     'success': True,
                     'image_url': image_url,
                     'image_id': image.id,
                     'credits_remaining': current_user.credits,
-                    'message': success_msg
+                    'message': _("Image generated successfully")
                 })
 
             except SQLAlchemyError as e:
                 db.session.rollback()
                 if attempt == max_retries - 1:  # Last attempt
                     app.logger.error(f"Database error after {max_retries} attempts: {str(e)}")
-                    error_msg = "Error saving image. Please try again"
-                    if current_lang != 'en':
-                        error_msg = translate_text(error_msg, current_lang)
-                    return jsonify({'error': error_msg}), 500
+                    return jsonify({'error': _("Error saving image. Please try again")}), 500
                 continue  # Try again
 
     except Exception as e:
         app.logger.exception("Unexpected error in generate route")
-        error_msg = "An unexpected error occurred"
-        if current_lang != 'en':
-            error_msg = translate_text(error_msg, current_lang)
-        return jsonify({'error': error_msg}), 500
+        return jsonify({'error': _("An unexpected error occurred")}), 500
 
 @app.route('/add_credits', methods=['POST'])
 @login_required
