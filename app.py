@@ -879,26 +879,39 @@ def download_image(image_id):
     
     # Verify the image belongs to the current user
     if image.user_id != current_user.id:
-        return "Unauthorized", 403
+        abort(403)
     
     try:
-        # Download the image from the URL
-        response = requests.get(image.image_url, timeout=10)
-        response.raise_for_status()
+        # Download the image from the URL with retries
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(image.image_url, timeout=10)
+                response.raise_for_status()
+                break
+            except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+                if attempt == max_retries - 1:  # Last attempt
+                    app.logger.error(f"Error downloading image {image_id}: {str(e)}")
+                    abort(500)
+                continue
         
         # Create a BytesIO object from the image data
         image_data = BytesIO(response.content)
         
-        # Use 'application/octet-stream' to enforce download
+        # Generate a filename based on the prompt
+        safe_prompt = "".join(x for x in image.prompt[:30] if x.isalnum() or x in (' ', '-', '_')).strip()
+        filename = f"image-{safe_prompt}-{image.id}.jpg"
+        
         return send_file(
             image_data,
-            mimetype='application/octet-stream',
+            mimetype='image/jpeg',
             as_attachment=True,
-            download_name=f'generated-image-{image.id}.jpeg'
+            download_name=filename,
+            max_age=300  # Cache for 5 minutes
         )
     except Exception as e:
-        app.logger.error(f"Error downloading image: {str(e)}")
-        return "Error downloading image", 500
+        app.logger.error(f"Error downloading image {image_id}: {str(e)}")
+        abort(500)
 
 @app.route('/serve-image/<int:image_id>')
 @login_required
@@ -907,25 +920,34 @@ def serve_image(image_id):
     
     # Verify the image belongs to the current user
     if image.user_id != current_user.id:
-        return "Unauthorized", 403
+        abort(403)
     
     try:
-        # Download the image from the URL
-        response = requests.get(image.image_url, timeout=10)
-        response.raise_for_status()
+        # Download the image from the URL with retries
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(image.image_url, timeout=10)
+                response.raise_for_status()
+                break
+            except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+                if attempt == max_retries - 1:  # Last attempt
+                    app.logger.error(f"Error serving image {image_id}: {str(e)}")
+                    abort(500)
+                continue
         
         # Serve the image with caching headers
         return Response(
             response.content,
             mimetype='image/jpeg',
             headers={
-                'Content-Disposition': f'inline; filename=generated-image-{image.id}.jpeg',
-                'Cache-Control': 'public, max-age=3600'
+                'Cache-Control': 'public, max-age=31536000',  # Cache for 1 year
+                'Content-Type': 'image/jpeg'
             }
         )
     except Exception as e:
-        app.logger.error(f"Error serving image: {str(e)}")
-        return "Error serving image", 500
+        app.logger.error(f"Error serving image {image_id}: {str(e)}")
+        abort(500)
 
 @app.route('/subscribe/<int:plan_id>', methods=['POST'])
 @login_required

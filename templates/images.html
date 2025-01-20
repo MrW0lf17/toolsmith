@@ -8,14 +8,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for image in images %}
             <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden transform hover:scale-105 transition duration-300">
-                <img src="{{ image.image_url }}" alt="{{ _('Generated Image') }}" class="w-full h-64 object-cover">
+                <img src="{{ url_for('serve_image', image_id=image.id) }}" alt="{{ _('Generated Image') }}" class="w-full h-64 object-cover">
                 <div class="p-4">
                     <p class="text-gray-300 text-sm mb-2">{{ image.prompt }}</p>
                     <p class="text-gray-500 text-xs mb-3">{{ _('Generated at') }} {{ image.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                    <button data-image-id="{{ image.id }}"
+                    <a href="{{ url_for('download_image', image_id=image.id) }}"
                        class="download-btn inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition duration-300 shadow-lg">
                         {{ _('Download') }}
-                    </button>
+                    </a>
                 </div>
             </div>
             {% endfor %}
@@ -43,63 +43,4 @@
         </script>
     </div>
 </div>
-
-<!-- JavaScript for handling downloads -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.download-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const imageContainer = this.closest('.bg-gray-800');
-                const imageUrl = imageContainer.querySelector('img').src;
-                const imageId = this.getAttribute('data-image-id');
-                downloadImage(imageUrl, imageId);
-            });
-        });
-    });
-
-    function downloadImage(imageUrl, imageId) {
-        fetch(imageUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("{{ _('Network response was not ok') }}");
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `generated-image-${imageId}.jpeg`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-            })
-            .catch(error => {
-                console.error("{{ _('There was an error!') }}", error);
-                // Fallback to server endpoint if direct download fails
-                fetch(`/download-image/${imageId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error("{{ _('Network response was not ok') }}");
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `generated-image-${imageId}.jpeg`;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        window.URL.revokeObjectURL(url);
-                    })
-                    .catch(error => {
-                        alert("{{ _('Error downloading image. Please try again.') }}");
-                        console.error("{{ _('There was an error!') }}", error);
-                    });
-            });
-    }
-</script>
 {% endblock %} 
