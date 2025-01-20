@@ -165,7 +165,16 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Initialize Stripe configuration
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', 'pk_test_51QjSomG1Y6czweQ3rB4iSwWqYRsGKxBHUKlyB2PV1LrPoqyY2qCCMoOxiJeQuQt0RLrWEYfvcDgjrgYr0E2csGdQ00ckQHLilZ')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51QjSomG1Y6czweQ3SDlIpDp3UHzM6fglBEYRU08kh7JpoEo8XgF3ifvWcVis4uYL3pvhBISNgtwoEt79Hs6wgXTV00IP25Flaf')
+
+# Make Stripe keys available in templates
+@app.context_processor
+def inject_stripe_key():
+    return dict(stripe_public_key=STRIPE_PUBLIC_KEY)
+
+# Configure Stripe
+stripe.api_key = STRIPE_SECRET_KEY
 stripe.api_version = '2023-10-16'  # Use latest API version
 
 def create_stripe_customer(user):
