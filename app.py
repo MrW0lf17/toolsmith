@@ -15,6 +15,7 @@ import sys
 from urllib.parse import urljoin
 from translations import translations
 from sqlalchemy.exc import SQLAlchemyError
+import stripe
 
 # Load environment variables
 load_dotenv()
@@ -126,6 +127,10 @@ class User(UserMixin, db.Model):
     images = db.relationship('Image', backref='user', lazy=True)
     subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'), nullable=True)
     subscription_end_date = db.Column(db.DateTime, nullable=True)
+    stripe_customer_id = db.Column(db.String(100), unique=True, nullable=True)  # Stripe Customer ID
+    stripe_subscription_id = db.Column(db.String(100), unique=True, nullable=True)  # Stripe Subscription ID
+    payment_method_id = db.Column(db.String(100), nullable=True)  # Stripe Payment Method ID
+    subscription_status = db.Column(db.String(20), default='none')  # active, trialing, past_due, canceled, none
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -133,6 +138,9 @@ class Subscription(db.Model):
     price = db.Column(db.Float, nullable=False)
     monthly_credits = db.Column(db.Integer, default=0)
     no_ads = db.Column(db.Boolean, default=False)
+    stripe_price_id = db.Column(db.String(100), unique=True)  # Stripe Price ID
+    stripe_product_id = db.Column(db.String(100), unique=True)  # Stripe Product ID
+    features = db.Column(db.JSON)  # Store features as JSON
     users = db.relationship('User', backref='subscription', lazy=True)
 
 class Image(db.Model):
@@ -142,18 +150,124 @@ class Image(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+class PaymentHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    stripe_payment_intent_id = db.Column(db.String(100), unique=True)
+    amount = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.String(3), default='usd')
+    status = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Initialize subscription plans
+# Initialize Stripe configuration
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+stripe.api_version = '2023-10-16'  # Use latest API version
+
+def create_stripe_customer(user):
+    """Create a Stripe customer for a user"""
+    try:
+        customer = stripe.Customer.create(
+            email=user.email,
+            name=user.name,
+            metadata={'user_id': user.id}
+        )
+        user.stripe_customer_id = customer.id
+        db.session.commit()
+        return customer
+    except stripe.error.StripeError as e:
+        app.logger.error(f"Error creating Stripe customer: {str(e)}")
+        return None
+
+def get_or_create_stripe_customer(user):
+    """Get existing Stripe customer or create new one"""
+    if user.stripe_customer_id:
+        try:
+            return stripe.Customer.retrieve(user.stripe_customer_id)
+        except stripe.error.StripeError:
+            pass
+    return create_stripe_customer(user)
+
 def create_subscription_plans():
     """Create initial subscription plans if they don't exist"""
     try:
         if not Subscription.query.first():
-            free = Subscription(name='Free', price=0.0, monthly_credits=5, no_ads=False)
-            basic = Subscription(name='Basic VIP', price=5.0, monthly_credits=10, no_ads=True)
-            premium = Subscription(name='Premium VIP', price=10.0, monthly_credits=100, no_ads=True)
+            # Create Basic VIP Plan in Stripe
+            basic_product = stripe.Product.create(
+                name='Basic VIP',
+                description='Basic VIP subscription with 10 monthly credits'
+            )
+            basic_price = stripe.Price.create(
+                product=basic_product.id,
+                unit_amount=500,  # $5.00
+                currency='usd',
+                recurring={'interval': 'month'}
+            )
+            
+            # Create Premium VIP Plan in Stripe
+            premium_product = stripe.Product.create(
+                name='Premium VIP',
+                description='Premium VIP subscription with 100 monthly credits'
+            )
+            premium_price = stripe.Price.create(
+                product=premium_product.id,
+                unit_amount=1000,  # $10.00
+                currency='usd',
+                recurring={'interval': 'month'}
+            )
+            
+            # Create Free Plan (no Stripe product needed)
+            free = Subscription(
+                name='Free',
+                price=0.0,
+                monthly_credits=5,
+                no_ads=False,
+                features={
+                    'credits': 5,
+                    'ads': True,
+                    'support': 'Basic',
+                    'generation_speed': 'Normal'
+                }
+            )
+            
+            # Create Basic VIP Plan
+            basic = Subscription(
+                name='Basic VIP',
+                price=5.0,
+                monthly_credits=10,
+                no_ads=True,
+                stripe_product_id=basic_product.id,
+                stripe_price_id=basic_price.id,
+                features={
+                    'credits': 10,
+                    'ads': False,
+                    'support': 'Priority',
+                    'generation_speed': 'Fast',
+                    'video_ad_credits': True
+                }
+            )
+            
+            # Create Premium VIP Plan
+            premium = Subscription(
+                name='Premium VIP',
+                price=10.0,
+                monthly_credits=100,
+                no_ads=True,
+                stripe_product_id=premium_product.id,
+                stripe_price_id=premium_price.id,
+                features={
+                    'credits': 100,
+                    'ads': False,
+                    'support': '24/7 Priority',
+                    'generation_speed': 'Ultra-Fast',
+                    'storage': 'Unlimited',
+                    'early_access': True
+                }
+            )
+            
             db.session.add(free)
             db.session.add(basic)
             db.session.add(premium)
@@ -162,6 +276,7 @@ def create_subscription_plans():
     except Exception as e:
         app.logger.error(f"Error creating subscription plans: {e}")
         db.session.rollback()
+        raise
 
 # Create all tables first, then initialize data
 with app.app_context():
@@ -417,12 +532,12 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     
     # Model-specific prompt enhancements with safety checks
     model_prompts = {
-        'realistic': f"professional high-quality detailed photograph of {prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
-        'anime': f"high-quality anime illustration of {prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
-        'painting': f"artistic digital painting of {prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
-        'pixel': f"pixel art style {prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
-        'minimal': f"minimalist design of {prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
-        '3d': f"3D rendered scene of {prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
+        'realistic': f"{prompt}, high quality, detailed photograph",
+        'anime': f"{prompt}, anime style art",
+        'painting': f"{prompt}, digital painting style",
+        'pixel': f"{prompt}, pixel art style",
+        'minimal': f"{prompt}, minimalist style",
+        '3d': f"{prompt}, 3D render style"
     }
     
     enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
@@ -607,7 +722,8 @@ def dashboard():
 @app.route('/subscriptions')
 @login_required
 def subscriptions():
-    return render_template('subscriptions.html')
+    return render_template('subscriptions.html',
+                         stripe_public_key=app.config['STRIPE_PUBLIC_KEY'])
 
 @app.route('/generate', methods=['POST'])
 @login_required
@@ -761,6 +877,161 @@ def subscribe(plan_id):
     db.session.commit()
     flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
     return redirect(url_for('dashboard'))
+
+@app.route('/create-checkout-session', methods=['POST'])
+@login_required
+def create_checkout_session():
+    """Create a Stripe Checkout Session for subscription"""
+    try:
+        plan_id = request.form.get('plan_id')
+        if not plan_id:
+            return jsonify({'error': _('Please select a plan')}), 400
+            
+        subscription = Subscription.query.get_or_404(plan_id)
+        if not subscription.stripe_price_id:
+            return jsonify({'error': _('Invalid subscription plan')}), 400
+            
+        # Get or create Stripe customer
+        customer = get_or_create_stripe_customer(current_user)
+        if not customer:
+            return jsonify({'error': _('Error creating customer')}), 500
+            
+        # Create checkout session
+        checkout_session = stripe.checkout.Session.create(
+            customer=customer.id,
+            payment_method_types=['card'],
+            line_items=[{
+                'price': subscription.stripe_price_id,
+                'quantity': 1,
+            }],
+            mode='subscription',
+            success_url=urljoin(get_base_url(), '/subscription-success?session_id={CHECKOUT_SESSION_ID}'),
+            cancel_url=urljoin(get_base_url(), '/subscriptions'),
+            metadata={
+                'user_id': current_user.id,
+                'plan_id': plan_id
+            }
+        )
+        
+        return jsonify({'sessionId': checkout_session.id})
+    except stripe.error.StripeError as e:
+        app.logger.error(f"Stripe error: {str(e)}")
+        return jsonify({'error': _('Payment processing error')}), 500
+    except Exception as e:
+        app.logger.error(f"Error creating checkout session: {str(e)}")
+        return jsonify({'error': _('An unexpected error occurred')}), 500
+
+@app.route('/subscription-success')
+@login_required
+def subscription_success():
+    """Handle successful subscription checkout"""
+    session_id = request.args.get('session_id')
+    if not session_id:
+        flash(_('Invalid session'), 'error')
+        return redirect(url_for('subscriptions'))
+        
+    try:
+        # Retrieve the session
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+        
+        # Update user's subscription
+        subscription = Subscription.query.get(checkout_session.metadata['plan_id'])
+        if subscription:
+            current_user.subscription = subscription
+            current_user.stripe_subscription_id = checkout_session.subscription
+            current_user.subscription_status = 'active'
+            current_user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
+            current_user.credits += subscription.monthly_credits
+            db.session.commit()
+            
+            flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
+        else:
+            flash(_('Error activating subscription'), 'error')
+            
+    except Exception as e:
+        app.logger.error(f"Error processing successful subscription: {str(e)}")
+        flash(_('Error processing subscription'), 'error')
+        
+    return redirect(url_for('dashboard'))
+
+@app.route('/cancel-subscription', methods=['POST'])
+@login_required
+def cancel_subscription():
+    """Cancel user's subscription"""
+    try:
+        if not current_user.stripe_subscription_id:
+            return jsonify({'error': _('No active subscription')}), 400
+            
+        # Cancel the subscription at period end
+        stripe.Subscription.modify(
+            current_user.stripe_subscription_id,
+            cancel_at_period_end=True
+        )
+        
+        current_user.subscription_status = 'canceled'
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': _('Subscription will be canceled at the end of the billing period')
+        })
+    except stripe.error.StripeError as e:
+        app.logger.error(f"Stripe error canceling subscription: {str(e)}")
+        return jsonify({'error': _('Error canceling subscription')}), 500
+    except Exception as e:
+        app.logger.error(f"Error canceling subscription: {str(e)}")
+        return jsonify({'error': _('An unexpected error occurred')}), 500
+
+@app.route('/stripe-webhook', methods=['POST'])
+def stripe_webhook():
+    """Handle Stripe webhook events"""
+    payload = request.get_data()
+    sig_header = request.headers.get('Stripe-Signature')
+    
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, os.environ.get('STRIPE_WEBHOOK_SECRET')
+        )
+    except ValueError as e:
+        app.logger.error(f"Invalid payload: {str(e)}")
+        return 'Invalid payload', 400
+    except stripe.error.SignatureVerificationError as e:
+        app.logger.error(f"Invalid signature: {str(e)}")
+        return 'Invalid signature', 400
+        
+    try:
+        if event['type'] == 'customer.subscription.updated':
+            subscription = event['data']['object']
+            user = User.query.filter_by(stripe_customer_id=subscription['customer']).first()
+            if user:
+                user.subscription_status = subscription['status']
+                if subscription['status'] == 'active':
+                    # Update subscription end date
+                    user.subscription_end_date = datetime.fromtimestamp(subscription['current_period_end'])
+                db.session.commit()
+                
+        elif event['type'] == 'customer.subscription.deleted':
+            subscription = event['data']['object']
+            user = User.query.filter_by(stripe_customer_id=subscription['customer']).first()
+            if user:
+                user.subscription_id = None
+                user.subscription_status = 'none'
+                user.stripe_subscription_id = None
+                db.session.commit()
+                
+        elif event['type'] == 'invoice.payment_failed':
+            invoice = event['data']['object']
+            user = User.query.filter_by(stripe_customer_id=invoice['customer']).first()
+            if user:
+                user.subscription_status = 'past_due'
+                db.session.commit()
+                # TODO: Send email notification to user
+                
+        return jsonify({'status': 'success'})
+        
+    except Exception as e:
+        app.logger.error(f"Error processing webhook: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():
