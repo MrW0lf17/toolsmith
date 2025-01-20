@@ -564,6 +564,39 @@ def translate_to_english(text: str) -> str:
         app.logger.error(f"English translation failed: {str(e)}")
         return text
 
+def upload_to_imgbb(image_url: str) -> str:
+    """Upload an image to ImgBB and return the permanent URL"""
+    IMGBB_API_KEY = "5782785615360e1e2a06975cdf8f6de5"
+    IMGBB_API_URL = "https://api.imgbb.com/1/upload"
+    
+    try:
+        # Download the image from the original URL
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        image_data = BytesIO(response.content)
+        
+        # Upload to ImgBB
+        files = {
+            'image': ('image.jpg', image_data, 'image/jpeg')
+        }
+        params = {
+            'key': IMGBB_API_KEY,
+        }
+        
+        upload_response = requests.post(IMGBB_API_URL, files=files, params=params)
+        upload_response.raise_for_status()
+        
+        result = upload_response.json()
+        if result.get('success'):
+            return result['data']['url']
+        else:
+            app.logger.error(f"ImgBB upload failed: {result}")
+            return None
+            
+    except Exception as e:
+        app.logger.error(f"Error uploading to ImgBB: {str(e)}")
+        return None
+
 def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     """Generate image from prompt with improved error handling and validation"""
     if not API_KEY:
@@ -616,31 +649,21 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
 
     try:
         response = requests.post(API_URL, json=data, headers=headers, timeout=30)
+        response.raise_for_status()
+        result = response.json()
         
-        # Log response details for debugging
-        app.logger.info(f"API Response Status: {response.status_code}")
-        app.logger.info(f"API Response Headers: {dict(response.headers)}")
-        
-        try:
-            result = response.json()
-        except json.JSONDecodeError:
-            app.logger.error(f"Invalid JSON response: {response.text}")
-            return None, "Invalid response from image service"
-
-        if response.status_code != 200:
-            error_msg = result.get('error', 'Unknown API error')
-            if 'model_rate_limit' in str(error_msg):
-                return None, "RATE_LIMIT_ERROR"
-            return None, f"API error: {error_msg}"
-
-        if not isinstance(result, dict) or 'data' not in result:
-            return None, "Invalid response format from API"
-
-        if not result['data'] or 'url' not in result['data'][0]:
-            return None, "No image URL in response"
-
-        return result['data'][0]['url'], None
-
+        if 'data' in result and len(result['data']) > 0:
+            temp_image_url = result['data'][0]['url']
+            
+            # Upload to ImgBB for permanent storage
+            permanent_url = upload_to_imgbb(temp_image_url)
+            if permanent_url:
+                return permanent_url, None
+            else:
+                return None, "Error storing image"
+        else:
+            return None, "No image generated"
+            
     except requests.exceptions.Timeout:
         return None, "Image generation timed out"
     except requests.exceptions.RequestException as e:
@@ -808,13 +831,6 @@ def generate():
         # Generate image
         image_url, error = generate_image(prompt, model)
         
-        # Handle rate limit error specifically
-        if error == "RATE_LIMIT_ERROR":
-            return jsonify({
-                'error': _("Rate limit reached. Please try again in a few seconds"),
-                'retry': True
-            }), 429
-
         if error:
             return jsonify({'error': f"{_('Error generating image')}: {error}"}), 500
 
@@ -852,7 +868,7 @@ def generate():
                 if attempt == max_retries - 1:  # Last attempt
                     app.logger.error(f"Database error after {max_retries} attempts: {str(e)}")
                     return jsonify({'error': _("Error saving image. Please try again")}), 500
-                continue  # Try again
+                continue
 
     except Exception as e:
         app.logger.exception("Unexpected error in generate route")
