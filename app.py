@@ -427,7 +427,7 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         data = {
             "model": "black-forest-labs/FLUX.1-schnell-Free",
             "prompt": enhanced_prompt,
-            "steps": 20,
+            "steps": 4,  # Fixed: API requires steps between 1 and 4
             "n": 1,
             "height": 1024,
             "width": 1024
@@ -456,7 +456,9 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         if response.status_code != 200:
             error_msg = f"API returned status code {response.status_code}"
             app.logger.error(f"{error_msg}: {json.dumps(result)}")
-            if 'error' in result:
+            if isinstance(result, dict) and 'error' in result:
+                if 'model_rate_limit' in str(result['error']):
+                    return None, "Rate limit reached. Please wait a moment and try again."
                 return None, f"API error: {result['error']}"
             return None, error_msg
             
