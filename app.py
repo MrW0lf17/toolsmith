@@ -724,53 +724,29 @@ def download_image(image_id):
 @app.route('/serve-image/<int:image_id>')
 @login_required
 def serve_image(image_id):
-    """Serve an image with improved error handling and caching"""
+    image = Image.query.get_or_404(image_id)
+    
+    # Verify the image belongs to the current user
+    if image.user_id != current_user.id:
+        return "Unauthorized", 403
+    
     try:
-        # Get image record
-        image = Image.query.get_or_404(image_id)
+        # Download the image from the URL
+        response = requests.get(image.image_url, timeout=10)
+        response.raise_for_status()
         
-        # Verify the image belongs to the current user
-        if image.user_id != current_user.id:
-            app.logger.warning(f"Unauthorized access attempt to image {image_id} by user {current_user.id}")
-            return "Unauthorized", 403
-        
-        # Validate image URL
-        if not image.image_url:
-            app.logger.error(f"Missing image URL for image {image_id}")
-            return "Image not found", 404
-        
-        try:
-            # Download the image from the URL with timeout
-            response = requests.get(image.image_url, timeout=10, stream=True)
-            response.raise_for_status()
-            
-            # Verify content type is an image
-            content_type = response.headers.get('content-type', '')
-            if not content_type.startswith('image/'):
-                app.logger.error(f"Invalid content type for image {image_id}: {content_type}")
-                return "Invalid image format", 415
-            
-            # Stream the response with caching headers
-            return Response(
-                response.iter_content(chunk_size=8192),
-                content_type=content_type,
-                headers={
-                    'Content-Disposition': f'inline; filename=generated-image-{image.id}.jpeg',
-                    'Cache-Control': 'public, max-age=86400',  # Cache for 24 hours
-                    'ETag': f'"{image_id}"'
-                }
-            )
-            
-        except requests.exceptions.Timeout:
-            app.logger.error(f"Timeout downloading image {image_id}")
-            return "Image download timeout", 504
-        except requests.exceptions.RequestException as e:
-            app.logger.error(f"Error downloading image {image_id}: {str(e)}")
-            return "Error downloading image", 502
-            
+        # Serve the image with caching headers
+        return Response(
+            response.content,
+            mimetype='image/jpeg',
+            headers={
+                'Content-Disposition': f'inline; filename=generated-image-{image.id}.jpeg',
+                'Cache-Control': 'public, max-age=3600'
+            }
+        )
     except Exception as e:
-        app.logger.exception(f"Error serving image {image_id}")
-        return "Internal server error", 500
+        app.logger.error(f"Error serving image: {str(e)}")
+        return "Error serving image", 500
 
 @app.route('/subscribe/<int:plan_id>', methods=['POST'])
 @login_required
