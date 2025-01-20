@@ -433,25 +433,56 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
             "width": 1024
         }
         
-        app.logger.info(f"Sending request to API with prompt: {enhanced_prompt}")
+        # Log request details
+        app.logger.info(f"Making API request to {API_URL}")
+        app.logger.info(f"Request headers: {headers}")
+        app.logger.info(f"Request data: {json.dumps(data)}")
+        
+        # Make the API request
         response = requests.post(API_URL, json=data, headers=headers, timeout=30)
+        
+        # Log response details
+        app.logger.info(f"Response status code: {response.status_code}")
+        app.logger.info(f"Response headers: {dict(response.headers)}")
+        
+        try:
+            result = response.json()
+            app.logger.info(f"Response body: {json.dumps(result)}")
+        except json.JSONDecodeError as e:
+            app.logger.error(f"Failed to decode JSON response: {str(e)}")
+            app.logger.error(f"Raw response text: {response.text}")
+            return None, "Invalid JSON response from API"
         
         if response.status_code != 200:
             error_msg = f"API returned status code {response.status_code}"
-            app.logger.error(f"{error_msg}: {response.text}")
+            app.logger.error(f"{error_msg}: {json.dumps(result)}")
+            if 'error' in result:
+                return None, f"API error: {result['error']}"
             return None, error_msg
             
-        result = response.json()
-        app.logger.debug(f"API Response: {result}")
-        
-        if 'data' in result and len(result['data']) > 0 and 'url' in result['data'][0]:
-            image_url = result['data'][0]['url']
-            app.logger.info(f"Successfully generated image: {image_url}")
-            return image_url, None
-        else:
-            error_msg = "Unexpected API response format"
-            app.logger.error(f"{error_msg}: {result}")
+        if not isinstance(result, dict):
+            error_msg = f"Unexpected response format: expected dict, got {type(result)}"
+            app.logger.error(error_msg)
             return None, error_msg
+            
+        if 'data' not in result:
+            error_msg = "No 'data' field in response"
+            app.logger.error(f"{error_msg}: {json.dumps(result)}")
+            return None, error_msg
+            
+        if not isinstance(result['data'], list) or not result['data']:
+            error_msg = "No images in response data"
+            app.logger.error(f"{error_msg}: {json.dumps(result)}")
+            return None, error_msg
+            
+        if 'url' not in result['data'][0]:
+            error_msg = "No URL in first image data"
+            app.logger.error(f"{error_msg}: {json.dumps(result['data'][0])}")
+            return None, error_msg
+            
+        image_url = result['data'][0]['url']
+        app.logger.info(f"Successfully generated image: {image_url}")
+        return image_url, None
             
     except requests.exceptions.Timeout:
         error_msg = "Image generation timed out"
@@ -466,6 +497,7 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         app.logger.error(error_msg)
+        app.logger.exception("Full traceback:")
         return None, error_msg
 
 @app.route('/')
