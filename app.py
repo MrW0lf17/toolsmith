@@ -817,8 +817,14 @@ def dashboard():
 @app.route('/subscriptions')
 @login_required
 def subscriptions():
-    return render_template('subscriptions.html',
-                         stripe_public_key=app.config['STRIPE_PUBLIC_KEY'])
+    try:
+        # Get all subscription plans
+        plans = Subscription.query.all()
+        return render_template('subscriptions.html', plans=plans)
+    except Exception as e:
+        app.logger.error(f"Error loading subscription plans: {str(e)}")
+        flash(_('Error loading subscription plans'), 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/generate', methods=['POST'])
 @login_required
@@ -1027,34 +1033,39 @@ def create_checkout_session():
             
         subscription = Subscription.query.get_or_404(plan_id)
         if not subscription.stripe_price_id:
+            app.logger.error(f"No Stripe price ID for plan {plan_id}")
             return jsonify({'error': _('Invalid subscription plan')}), 400
             
         # Get or create Stripe customer
         customer = get_or_create_stripe_customer(current_user)
         if not customer:
+            app.logger.error(f"Failed to create/get Stripe customer for user {current_user.id}")
             return jsonify({'error': _('Error creating customer')}), 500
             
         # Create checkout session
-        checkout_session = stripe.checkout.Session.create(
-            customer=customer.id,
-            payment_method_types=['card'],
-            line_items=[{
-                'price': subscription.stripe_price_id,
-                'quantity': 1,
-            }],
-            mode='subscription',
-            success_url=urljoin(get_base_url(), '/subscription-success?session_id={CHECKOUT_SESSION_ID}'),
-            cancel_url=urljoin(get_base_url(), '/subscriptions'),
-            metadata={
-                'user_id': current_user.id,
-                'plan_id': plan_id
-            }
-        )
-        
-        return jsonify({'sessionId': checkout_session.id})
-    except stripe.error.StripeError as e:
-        app.logger.error(f"Stripe error: {str(e)}")
-        return jsonify({'error': _('Payment processing error')}), 500
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                customer=customer.id,
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': subscription.stripe_price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=urljoin(get_base_url(), '/subscription-success?session_id={CHECKOUT_SESSION_ID}'),
+                cancel_url=urljoin(get_base_url(), '/subscriptions'),
+                metadata={
+                    'user_id': current_user.id,
+                    'plan_id': plan_id
+                }
+            )
+            
+            return jsonify({'sessionId': checkout_session.id})
+            
+        except stripe.error.StripeError as e:
+            app.logger.error(f"Stripe error creating checkout session: {str(e)}")
+            return jsonify({'error': _('Payment processing error')}), 500
+            
     except Exception as e:
         app.logger.error(f"Error creating checkout session: {str(e)}")
         return jsonify({'error': _('An unexpected error occurred')}), 500
@@ -1072,20 +1083,35 @@ def subscription_success():
         # Retrieve the session
         checkout_session = stripe.checkout.Session.retrieve(session_id)
         
+        # Verify the user
+        if str(checkout_session.metadata.get('user_id')) != str(current_user.id):
+            app.logger.error(f"User ID mismatch in checkout session")
+            flash(_('Invalid session'), 'error')
+            return redirect(url_for('subscriptions'))
+        
         # Update user's subscription
         subscription = Subscription.query.get(checkout_session.metadata['plan_id'])
         if subscription:
-            current_user.subscription = subscription
-            current_user.stripe_subscription_id = checkout_session.subscription
-            current_user.subscription_status = 'active'
-            current_user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
-            current_user.credits += subscription.monthly_credits
-            db.session.commit()
-            
-            flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
+            try:
+                current_user.subscription = subscription
+                current_user.stripe_subscription_id = checkout_session.subscription
+                current_user.subscription_status = 'active'
+                current_user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
+                current_user.credits += subscription.monthly_credits
+                db.session.commit()
+                
+                flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
+            except SQLAlchemyError as e:
+                app.logger.error(f"Database error updating subscription: {str(e)}")
+                db.session.rollback()
+                flash(_('Error activating subscription'), 'error')
         else:
+            app.logger.error(f"Subscription plan not found: {checkout_session.metadata['plan_id']}")
             flash(_('Error activating subscription'), 'error')
             
+    except stripe.error.StripeError as e:
+        app.logger.error(f"Stripe error processing successful subscription: {str(e)}")
+        flash(_('Error processing subscription'), 'error')
     except Exception as e:
         app.logger.error(f"Error processing successful subscription: {str(e)}")
         flash(_('Error processing subscription'), 'error')
@@ -1100,22 +1126,24 @@ def cancel_subscription():
         if not current_user.stripe_subscription_id:
             return jsonify({'error': _('No active subscription')}), 400
             
-        # Cancel the subscription at period end
-        stripe.Subscription.modify(
-            current_user.stripe_subscription_id,
-            cancel_at_period_end=True
-        )
-        
-        current_user.subscription_status = 'canceled'
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': _('Subscription will be canceled at the end of the billing period')
-        })
-    except stripe.error.StripeError as e:
-        app.logger.error(f"Stripe error canceling subscription: {str(e)}")
-        return jsonify({'error': _('Error canceling subscription')}), 500
+        try:
+            # Cancel the subscription at period end
+            stripe.Subscription.modify(
+                current_user.stripe_subscription_id,
+                cancel_at_period_end=True
+            )
+            
+            current_user.subscription_status = 'canceled'
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': _('Subscription will be canceled at the end of the billing period')
+            })
+        except stripe.error.StripeError as e:
+            app.logger.error(f"Stripe error canceling subscription: {str(e)}")
+            return jsonify({'error': _('Error canceling subscription')}), 500
+            
     except Exception as e:
         app.logger.error(f"Error canceling subscription: {str(e)}")
         return jsonify({'error': _('An unexpected error occurred')}), 500
