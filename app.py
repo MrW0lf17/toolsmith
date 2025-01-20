@@ -869,19 +869,14 @@ def add_credits():
 def get_proxy_url(url: str) -> str:
     """Convert an image URL to a proxied URL that doesn't expire"""
     try:
-        # Extract the base64-encoded part after 'imgproxy'
-        base_url = "https://api.together.ai/imgproxy/"
-        if base_url in url:
-            # Already a proxied URL, return as is
-            return url
-            
-        # If it's an S3 URL, convert it to a proxied URL
-        if "amazonaws.com" in url:
-            parts = url.split('?')
-            if len(parts) > 0:
-                # Take just the base URL without query parameters
-                return parts[0]
-        
+        # If it's an S3 URL with query parameters, remove them
+        if "amazonaws.com" in url and "?" in url:
+            # Keep everything before the query parameters
+            base_url = url.split('?')[0]
+            # Get the image ID from the URL
+            image_id = base_url.split('/')[-1]
+            # Construct the imgproxy URL
+            return f"https://api.together.ai/imgproxy/{image_id}/format:jpeg/{base_url}"
         return url
     except Exception as e:
         app.logger.error(f"Error creating proxy URL: {str(e)}")
