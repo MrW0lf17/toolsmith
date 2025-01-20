@@ -253,16 +253,17 @@ function showNotification(message, type = 'error') {
 }
 
 function generateImage(retryCount = 0) {
-    const prompt = document.getElementById('prompt').value;
+    const prompt = document.getElementById('prompt').value.trim();
     const model = document.getElementById('model').value;
+    const generateBtn = document.getElementById('generate-btn');
+
     if (!prompt) {
-        showNotification("{{ _('Please enter image description') }}");
+        showNotification("{{ _('Please enter image description') }}", 'error');
         return;
     }
 
-    const generateBtn = document.getElementById('generate-btn');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">' + "{{ _('Generating...') }}";
+    generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6"> {{ _("Generating...") }}';
 
     fetch('/generate', {
         method: 'POST',
@@ -277,16 +278,25 @@ function generateImage(retryCount = 0) {
         if (contentType && contentType.includes('application/json')) {
             return response.json().then(data => ({status: response.status, data}));
         } else {
-            return response.text().then(text => {
-                throw new Error(`Unexpected response format: ${text}`);
-            });
+            throw new Error('Invalid response format');
         }
     })
     .then(({status, data}) => {
+        if (status === 429 && data.retry && retryCount < 3) {
+            const retryDelay = (retryCount + 1) * 5000; // 5s, 10s, 15s
+            showNotification(`{{ _("Rate limit reached. Retrying in") }} ${retryDelay/1000} {{ _("seconds") }}...`);
+            
+            setTimeout(() => {
+                generateImage(retryCount + 1);
+            }, retryDelay);
+            return;
+        }
+
         if (status !== 200 || data.error) {
             throw new Error(data.error || "{{ _('Error generating image. Please try again') }}");
         }
         
+        // Update UI with generated image
         const generatedImage = document.getElementById('generated-image');
         generatedImage.src = data.image_url;
         generatedImage.dataset.imageId = data.image_id;
@@ -294,25 +304,20 @@ function generateImage(retryCount = 0) {
         document.getElementById('credits-count').textContent = data.credits_remaining;
         
         showNotification(data.message, 'success');
+        
+        // Reset button state
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6"> {{ _("Generate Image (1 Credit)") }}';
     })
     .catch(error => {
         console.error('Error:', error);
+        showNotification(error.message || "{{ _('An unexpected error occurred. Please try again') }}", 'error');
         
-        // If it's a rate limit error and we haven't retried too many times
-        if (error.message && error.message.includes('Rate limit reached') && retryCount < 3) {
-            const retryDelay = (retryCount + 1) * 10000; // 10s, 20s, 30s
-            showNotification(`Rate limit reached. Retrying in ${retryDelay/1000} seconds...`);
-            
-            setTimeout(() => {
-                generateImage(retryCount + 1);
-            }, retryDelay);
-            
-            return;
+        // Only reset button if not retrying
+        if (retryCount === 0) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6"> {{ _("Generate Image (1 Credit)") }}';
         }
-        
-        showNotification(error.message || "{{ _('An unexpected error occurred. Please try again') }}");
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<img src="https://img.icons8.com/fluency/24/magic-wand.png" alt="Magic Wand" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">' + "{{ _('Generate Image (1 Credit)') }}";
     });
 }
 

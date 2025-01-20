@@ -14,6 +14,7 @@ from functools import lru_cache
 import sys
 from urllib.parse import urljoin
 from translations import translations
+from sqlalchemy.exc import SQLAlchemyError
 
 # Load environment variables
 load_dotenv()
@@ -399,10 +400,14 @@ def translate_to_english(text: str) -> str:
         return text
 
 def generate_image(prompt: str, model: str = 'realistic') -> tuple:
-    """Generate image from prompt"""
+    """Generate image from prompt with improved error handling and validation"""
     if not API_KEY:
         app.logger.error("API key not configured")
         return None, "API configuration error"
+
+    # Validate prompt length
+    if len(prompt) > 500:
+        return None, "Prompt too long (maximum 500 characters)"
 
     headers = {
         "accept": "application/json",
@@ -410,97 +415,62 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         "authorization": f"Bearer {API_KEY}"
     }
     
+    # Model-specific prompt enhancements with safety checks
+    model_prompts = {
+        'realistic': f"professional high-quality detailed photograph of {prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
+        'anime': f"high-quality anime illustration of {prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
+        'painting': f"artistic digital painting of {prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
+        'pixel': f"pixel art style {prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
+        'minimal': f"minimalist design of {prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
+        '3d': f"3D rendered scene of {prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
+    }
+    
+    enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
+    
+    data = {
+        "model": "black-forest-labs/FLUX.1-schnell-Free",
+        "prompt": enhanced_prompt,
+        "steps": 4,
+        "n": 1,
+        "height": 1024,
+        "width": 1024
+    }
+
     try:
-        # Model-specific prompt enhancements
-        model_prompts = {
-            'realistic': f"professional high-quality detailed photograph of {prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
-            'anime': f"high-quality anime illustration of {prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
-            'painting': f"artistic digital painting of {prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
-            'pixel': f"pixel art style {prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
-            'minimal': f"minimalist design of {prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
-            '3d': f"3D rendered scene of {prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
-        }
-        
-        # Enhanced prompt with model-specific guidance
-        enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
-        
-        data = {
-            "model": "black-forest-labs/FLUX.1-schnell-Free",
-            "prompt": enhanced_prompt,
-            "steps": 4,  # Fixed: API requires steps between 1 and 4
-            "n": 1,
-            "height": 1024,
-            "width": 1024
-        }
-        
-        # Log request details
-        app.logger.info(f"Making API request to {API_URL}")
-        app.logger.info(f"Request headers: {headers}")
-        app.logger.info(f"Request data: {json.dumps(data)}")
-        
-        # Make the API request
         response = requests.post(API_URL, json=data, headers=headers, timeout=30)
         
-        # Log response details
-        app.logger.info(f"Response status code: {response.status_code}")
-        app.logger.info(f"Response headers: {dict(response.headers)}")
+        # Log response details for debugging
+        app.logger.info(f"API Response Status: {response.status_code}")
+        app.logger.info(f"API Response Headers: {dict(response.headers)}")
         
         try:
             result = response.json()
-            app.logger.info(f"Response body: {json.dumps(result)}")
-        except json.JSONDecodeError as e:
-            app.logger.error(f"Failed to decode JSON response: {str(e)}")
-            app.logger.error(f"Raw response text: {response.text}")
-            return None, "Invalid JSON response from API"
-        
+        except json.JSONDecodeError:
+            app.logger.error(f"Invalid JSON response: {response.text}")
+            return None, "Invalid response from image service"
+
         if response.status_code != 200:
-            error_msg = f"API returned status code {response.status_code}"
-            app.logger.error(f"{error_msg}: {json.dumps(result)}")
-            if isinstance(result, dict) and 'error' in result:
-                if 'model_rate_limit' in str(result['error']):
-                    return None, "Rate limit reached. Please wait a moment and try again."
-                return None, f"API error: {result['error']}"
-            return None, error_msg
-            
-        if not isinstance(result, dict):
-            error_msg = f"Unexpected response format: expected dict, got {type(result)}"
-            app.logger.error(error_msg)
-            return None, error_msg
-            
-        if 'data' not in result:
-            error_msg = "No 'data' field in response"
-            app.logger.error(f"{error_msg}: {json.dumps(result)}")
-            return None, error_msg
-            
-        if not isinstance(result['data'], list) or not result['data']:
-            error_msg = "No images in response data"
-            app.logger.error(f"{error_msg}: {json.dumps(result)}")
-            return None, error_msg
-            
-        if 'url' not in result['data'][0]:
-            error_msg = "No URL in first image data"
-            app.logger.error(f"{error_msg}: {json.dumps(result['data'][0])}")
-            return None, error_msg
-            
-        image_url = result['data'][0]['url']
-        app.logger.info(f"Successfully generated image: {image_url}")
-        return image_url, None
-            
+            error_msg = result.get('error', 'Unknown API error')
+            if 'model_rate_limit' in str(error_msg):
+                return None, "RATE_LIMIT_ERROR"
+            return None, f"API error: {error_msg}"
+
+        if not isinstance(result, dict) or 'data' not in result:
+            return None, "Invalid response format from API"
+
+        if not result['data'] or 'url' not in result['data'][0]:
+            return None, "No image URL in response"
+
+        return result['data'][0]['url'], None
+
     except requests.exceptions.Timeout:
-        error_msg = "Image generation timed out"
-        app.logger.error(error_msg)
-        return None, error_msg
+        return None, "Image generation timed out"
     except requests.exceptions.RequestException as e:
-        error_msg = f"Request failed: {str(e)}"
-        app.logger.error(f"{error_msg}")
-        if hasattr(e, 'response') and e.response is not None:
-            app.logger.error(f"Error Response: {e.response.text}")
-        return None, error_msg
+        app.logger.error(f"Request failed: {str(e)}")
+        return None, "Network error during image generation"
     except Exception as e:
-        error_msg = f"Unexpected error: {str(e)}"
-        app.logger.error(error_msg)
-        app.logger.exception("Full traceback:")
-        return None, error_msg
+        app.logger.exception("Unexpected error in generate_image")
+        return None, f"Unexpected error: {str(e)}"
 
 @app.route('/')
 def index():
@@ -642,56 +612,72 @@ def subscriptions():
 @app.route('/generate', methods=['POST'])
 @login_required
 def generate():
+    """Handle image generation request with improved error handling"""
     try:
-        app.logger.info(f"Starting image generation for user {current_user.id}")
-        
+        # Input validation
         if current_user.credits <= 0:
-            app.logger.warning(f"User {current_user.id} attempted to generate image with insufficient credits")
             return jsonify({'error': _("You don't have enough credits")}), 400
-        
-        prompt = request.form.get('prompt')
+
+        prompt = request.form.get('prompt', '').strip()
         if not prompt:
-            app.logger.warning(f"User {current_user.id} attempted to generate image without prompt")
             return jsonify({'error': _("Please enter an image description")}), 400
-        
+
         model = request.form.get('model', 'realistic')
-        app.logger.info(f"Generating image for user {current_user.id} with model {model} and prompt: {prompt}")
-        
+        if model not in ['realistic', 'anime', 'painting', 'pixel', 'minimal', '3d']:
+            model = 'realistic'
+
         # Generate image
         image_url, error = generate_image(prompt, model)
-        if error:
-            app.logger.error(f"Error generating image for user {current_user.id}: {error}")
-            return jsonify({'error': f"{_('Error generating image')}: {error}"}), 500
-        if not image_url:
-            app.logger.error(f"No image URL returned for user {current_user.id}")
-            return jsonify({'error': _("Error generating image. Please try again")}), 500
         
-        try:
-            app.logger.info(f"Saving image record for user {current_user.id}")
-            # Create new image record
-            image = Image(prompt=prompt, image_url=image_url, user_id=current_user.id)
-            current_user.credits -= 1
-            
-            db.session.add(image)
-            db.session.commit()
-            
-            app.logger.info(f"Successfully saved image {image.id} for user {current_user.id}")
+        # Handle rate limit error specifically
+        if error == "RATE_LIMIT_ERROR":
             return jsonify({
-                'success': True,
-                'image_url': image_url,
-                'image_id': image.id,
-                'credits_remaining': current_user.credits,
-                'message': _("Image generated successfully")
-            })
-        except Exception as e:
-            db.session.rollback()
-            error_msg = f"Database error: {str(e)}"
-            app.logger.error(f"Database error for user {current_user.id}: {error_msg}")
-            return jsonify({'error': _("Error saving image. Please try again")}), 500
-            
+                'error': _("Rate limit reached. Please try again in a few seconds"),
+                'retry': True
+            }), 429
+
+        if error:
+            return jsonify({'error': f"{_('Error generating image')}: {error}"}), 500
+
+        # Database transaction with retry mechanism
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Start a new transaction
+                db.session.begin_nested()
+                
+                # Create image record
+                image = Image(
+                    prompt=prompt[:500],  # Ensure prompt fits in database
+                    image_url=image_url[:500],  # Ensure URL fits in database
+                    user_id=current_user.id
+                )
+                db.session.add(image)
+                
+                # Update user credits
+                current_user.credits -= 1
+                
+                # Commit transaction
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'image_url': image_url,
+                    'image_id': image.id,
+                    'credits_remaining': current_user.credits,
+                    'message': _("Image generated successfully")
+                })
+
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                if attempt == max_retries - 1:  # Last attempt
+                    app.logger.error(f"Database error after {max_retries} attempts: {str(e)}")
+                    return jsonify({'error': _("Error saving image. Please try again")}), 500
+                continue  # Try again
+
     except Exception as e:
-        app.logger.error(f"Unexpected error in generate route for user {current_user.id}: {str(e)}")
-        return jsonify({'error': _("An unexpected error occurred. Please try again")}), 500
+        app.logger.exception("Unexpected error in generate route")
+        return jsonify({'error': _("An unexpected error occurred")}), 500
 
 @app.route('/add_credits', methods=['POST'])
 @login_required
