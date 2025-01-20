@@ -27,6 +27,12 @@ services:
         sync: false
       - key: FLUX_API_KEY
         sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        value: toolsmith
+      - key: CLOUDINARY_API_KEY
+        value: "282311257619256"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
     headers:
       - path: /*
         name: X-Frame-Options

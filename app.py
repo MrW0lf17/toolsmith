@@ -15,6 +15,9 @@ import sys
 from urllib.parse import urljoin
 from translations import translations
 from sqlalchemy.exc import SQLAlchemyError
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Load environment variables
 load_dotenv()
@@ -400,29 +403,23 @@ def translate_to_english(text: str) -> str:
         return text
 
 def generate_image(prompt: str, model: str = 'realistic') -> tuple:
-    """Generate image from prompt with improved error handling and validation"""
+    """Generate an image using the API and save it to Cloudinary"""
     if not API_KEY:
         app.logger.error("API key not configured")
-        return None, "API configuration error"
-
-    # Validate prompt length
-    if len(prompt) > 500:
-        return None, "Prompt too long (maximum 500 characters)"
+        return None, "API key not configured"
 
     headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "authorization": f"Bearer {API_KEY}"
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
     }
-    
-    # Model-specific prompt enhancements with safety checks
+
     model_prompts = {
-        'realistic': f"professional high-quality detailed photograph of {prompt}, cinematic lighting, 8k uhd, highly detailed, photorealistic",
-        'anime': f"high-quality anime illustration of {prompt}, anime style, vibrant colors, detailed anime art, studio ghibli inspired",
-        'painting': f"artistic digital painting of {prompt}, oil painting style, detailed brushstrokes, artistic composition, vibrant colors",
-        'pixel': f"pixel art style {prompt}, retro game art, 16-bit style, clear pixel definition, nostalgic gaming aesthetic",
-        'minimal': f"minimalist design of {prompt}, clean lines, simple shapes, minimal color palette, elegant composition",
-        '3d': f"3D rendered scene of {prompt}, octane render, volumetric lighting, subsurface scattering, high-end 3D visualization"
+        'realistic': f"Create a photorealistic image of {prompt}. The image should be highly detailed and lifelike.",
+        'anime': f"Create an anime-style illustration of {prompt}. The image should have vibrant colors and distinctive anime characteristics.",
+        'painting': f"Create an artistic painting of {prompt}. The image should have visible brushstrokes and artistic interpretation.",
+        'pixel': f"Create a pixel art version of {prompt}. The image should have a retro, 8-bit style appearance.",
+        'minimal': f"Create a minimalist interpretation of {prompt}. The image should be clean, simple, and use minimal elements.",
+        '3d': f"Create a 3D rendered image of {prompt}. The image should have depth, lighting, and realistic textures."
     }
     
     enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
@@ -439,7 +436,6 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     try:
         response = requests.post(API_URL, json=data, headers=headers, timeout=30)
         
-        # Log response details for debugging
         app.logger.info(f"API Response Status: {response.status_code}")
         app.logger.info(f"API Response Headers: {dict(response.headers)}")
         
@@ -461,7 +457,26 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         if not result['data'] or 'url' not in result['data'][0]:
             return None, "No image URL in response"
 
-        return result['data'][0]['url'], None
+        # Download the image from the temporary URL
+        temp_image_url = result['data'][0]['url']
+        img_response = requests.get(temp_image_url, timeout=30)
+        if not img_response.ok:
+            return None, "Failed to download generated image"
+
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            BytesIO(img_response.content),
+            folder="generated_images",
+            resource_type="image",
+            format="jpg",
+            transformation=[
+                {"quality": "auto:good"},
+                {"fetch_format": "auto"}
+            ]
+        )
+
+        # Return the Cloudinary URL
+        return upload_result['secure_url'], None
 
     except requests.exceptions.Timeout:
         return None, "Image generation timed out"
@@ -703,16 +718,21 @@ def download_image(image_id):
         return "Unauthorized", 403
     
     try:
-        # Download the image from the URL
+        # For Cloudinary URLs, we can redirect directly with download flag
+        if 'cloudinary' in image.image_url:
+            download_url = cloudinary.utils.cloudinary_url(
+                image.image_url.split('/')[-1],
+                format='jpg',
+                flags='attachment'
+            )[0]
+            return redirect(download_url)
+            
+        # For legacy URLs, download through our server
         response = requests.get(image.image_url, timeout=10)
         response.raise_for_status()
         
-        # Create a BytesIO object from the image data
-        image_data = BytesIO(response.content)
-        
-        # Use 'application/octet-stream' to enforce download
         return send_file(
-            image_data,
+            BytesIO(response.content),
             mimetype='application/octet-stream',
             as_attachment=True,
             download_name=f'generated-image-{image.id}.jpeg'
@@ -731,11 +751,14 @@ def serve_image(image_id):
         return "Unauthorized", 403
     
     try:
-        # Download the image from the URL
+        # For Cloudinary URLs, we can redirect directly
+        if 'cloudinary' in image.image_url:
+            return redirect(image.image_url)
+            
+        # For legacy URLs, try to serve them through our server
         response = requests.get(image.image_url, timeout=10)
         response.raise_for_status()
         
-        # Serve the image with caching headers
         return Response(
             response.content,
             mimetype='image/jpeg',
@@ -762,6 +785,21 @@ def subscribe(plan_id):
     flash(_('Successfully subscribed to {} plan').format(subscription.name), 'success')
     return redirect(url_for('dashboard'))
 
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', 'toolsmith'),
+    api_key = os.environ.get('CLOUDINARY_API_KEY', '282311257619256'),
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET', 'LhwZMqdaK3v7F7cKCXL8Xs2LCMs'),
+    secure = True
+)
+
+# Validate Cloudinary configuration
+try:
+    cloudinary.api.ping()
+    app.logger.info("Cloudinary configured successfully")
+except Exception as e:
+    app.logger.error(f"Cloudinary configuration error: {str(e)}")
+    
 if __name__ == '__main__':
     with app.app_context():
         try:
