@@ -875,6 +875,7 @@ def images():
 @app.route('/download-image/<int:image_id>')
 @login_required
 def download_image(image_id):
+    """Download an image from the database"""
     image = Image.query.get_or_404(image_id)
     
     # Verify the image belongs to the current user
@@ -886,6 +887,7 @@ def download_image(image_id):
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                # Use the original image URL from the database
                 response = requests.get(image.image_url, timeout=10)
                 response.raise_for_status()
                 break
@@ -916,6 +918,7 @@ def download_image(image_id):
 @app.route('/serve-image/<int:image_id>')
 @login_required
 def serve_image(image_id):
+    """Serve an image from the database"""
     image = Image.query.get_or_404(image_id)
     
     # Verify the image belongs to the current user
@@ -927,6 +930,7 @@ def serve_image(image_id):
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                # Use the original image URL from the database
                 response = requests.get(image.image_url, timeout=10)
                 response.raise_for_status()
                 break
@@ -942,7 +946,8 @@ def serve_image(image_id):
             mimetype='image/jpeg',
             headers={
                 'Cache-Control': 'public, max-age=31536000',  # Cache for 1 year
-                'Content-Type': 'image/jpeg'
+                'Content-Type': 'image/jpeg',
+                'X-Content-Type-Options': 'nosniff'  # Prevent MIME type sniffing
             }
         )
     except Exception as e:
