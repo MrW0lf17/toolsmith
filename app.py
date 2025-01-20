@@ -427,7 +427,7 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         data = {
             "model": "black-forest-labs/FLUX.1-schnell-Free",
             "prompt": enhanced_prompt,
-            "steps": 4,
+            "steps": 20,
             "n": 1,
             "height": 1024,
             "width": 1024
@@ -445,7 +445,9 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
         app.logger.debug(f"API Response: {result}")
         
         if 'data' in result and len(result['data']) > 0 and 'url' in result['data'][0]:
-            return result['data'][0]['url'], None
+            image_url = result['data'][0]['url']
+            app.logger.info(f"Successfully generated image: {image_url}")
+            return image_url, None
         else:
             error_msg = "Unexpected API response format"
             app.logger.error(f"{error_msg}: {result}")
@@ -607,23 +609,31 @@ def subscriptions():
 @login_required
 def generate():
     try:
+        app.logger.info(f"Starting image generation for user {current_user.id}")
+        
         if current_user.credits <= 0:
+            app.logger.warning(f"User {current_user.id} attempted to generate image with insufficient credits")
             return jsonify({'error': _("You don't have enough credits")}), 400
         
         prompt = request.form.get('prompt')
         if not prompt:
+            app.logger.warning(f"User {current_user.id} attempted to generate image without prompt")
             return jsonify({'error': _("Please enter an image description")}), 400
         
         model = request.form.get('model', 'realistic')
+        app.logger.info(f"Generating image for user {current_user.id} with model {model} and prompt: {prompt}")
         
         # Generate image
         image_url, error = generate_image(prompt, model)
         if error:
+            app.logger.error(f"Error generating image for user {current_user.id}: {error}")
             return jsonify({'error': f"{_('Error generating image')}: {error}"}), 500
         if not image_url:
+            app.logger.error(f"No image URL returned for user {current_user.id}")
             return jsonify({'error': _("Error generating image. Please try again")}), 500
         
         try:
+            app.logger.info(f"Saving image record for user {current_user.id}")
             # Create new image record
             image = Image(prompt=prompt, image_url=image_url, user_id=current_user.id)
             current_user.credits -= 1
@@ -631,6 +641,7 @@ def generate():
             db.session.add(image)
             db.session.commit()
             
+            app.logger.info(f"Successfully saved image {image.id} for user {current_user.id}")
             return jsonify({
                 'success': True,
                 'image_url': image_url,
@@ -641,11 +652,11 @@ def generate():
         except Exception as e:
             db.session.rollback()
             error_msg = f"Database error: {str(e)}"
-            app.logger.error(error_msg)
+            app.logger.error(f"Database error for user {current_user.id}: {error_msg}")
             return jsonify({'error': _("Error saving image. Please try again")}), 500
             
     except Exception as e:
-        app.logger.error(f"Unexpected error in generate route: {str(e)}")
+        app.logger.error(f"Unexpected error in generate route for user {current_user.id}: {str(e)}")
         return jsonify({'error': _("An unexpected error occurred. Please try again")}), 500
 
 @app.route('/add_credits', methods=['POST'])
