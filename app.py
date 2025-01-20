@@ -195,11 +195,23 @@ def get_or_create_stripe_customer(user):
 def create_subscription_plans():
     """Create initial subscription plans if they don't exist"""
     try:
-        # First verify the table exists
+        # First verify the table exists with correct schema
         inspector = inspect(db.engine)
+        
+        # Check if subscription table exists
         if not inspector.has_table('subscription'):
-            app.logger.error("Subscription table does not exist!")
-            db.create_all()  # Recreate all tables if missing
+            app.logger.info("Creating subscription table...")
+            db.create_all()
+        else:
+            # Check if all required columns exist
+            columns = {c['name'] for c in inspector.get_columns('subscription')}
+            required_columns = {'stripe_price_id', 'stripe_product_id', 'features'}
+            
+            # If any required column is missing, drop and recreate tables
+            if not required_columns.issubset(columns):
+                app.logger.info("Subscription table schema outdated, recreating tables...")
+                db.drop_all()
+                db.create_all()
             
         # Check if any subscriptions exist
         existing_subs = Subscription.query.first()
@@ -210,28 +222,47 @@ def create_subscription_plans():
         app.logger.info("Creating initial subscription plans...")
         
         # Create Basic VIP Plan in Stripe
-        basic_product = stripe.Product.create(
-            name='Basic VIP',
-            description='Basic VIP subscription with 10 monthly credits'
-        )
-        basic_price = stripe.Price.create(
-            product=basic_product.id,
-            unit_amount=500,  # $5.00
-            currency='usd',
-            recurring={'interval': 'month'}
-        )
-        
-        # Create Premium VIP Plan in Stripe
-        premium_product = stripe.Product.create(
-            name='Premium VIP',
-            description='Premium VIP subscription with 100 monthly credits'
-        )
-        premium_price = stripe.Price.create(
-            product=premium_product.id,
-            unit_amount=1000,  # $10.00
-            currency='usd',
-            recurring={'interval': 'month'}
-        )
+        if os.environ.get('STRIPE_SECRET_KEY'):
+            try:
+                basic_product = stripe.Product.create(
+                    name='Basic VIP',
+                    description='Basic VIP subscription with 10 monthly credits'
+                )
+                basic_price = stripe.Price.create(
+                    product=basic_product.id,
+                    unit_amount=500,  # $5.00
+                    currency='usd',
+                    recurring={'interval': 'month'}
+                )
+                
+                # Create Premium VIP Plan in Stripe
+                premium_product = stripe.Product.create(
+                    name='Premium VIP',
+                    description='Premium VIP subscription with 100 monthly credits'
+                )
+                premium_price = stripe.Price.create(
+                    product=premium_product.id,
+                    unit_amount=1000,  # $10.00
+                    currency='usd',
+                    recurring={'interval': 'month'}
+                )
+                
+                stripe_basic_product_id = basic_product.id
+                stripe_basic_price_id = basic_price.id
+                stripe_premium_product_id = premium_product.id
+                stripe_premium_price_id = premium_price.id
+            except stripe.error.StripeError as e:
+                app.logger.error(f"Stripe API error: {str(e)}")
+                stripe_basic_product_id = None
+                stripe_basic_price_id = None
+                stripe_premium_product_id = None
+                stripe_premium_price_id = None
+        else:
+            app.logger.warning("STRIPE_SECRET_KEY not set, skipping Stripe product creation")
+            stripe_basic_product_id = None
+            stripe_basic_price_id = None
+            stripe_premium_product_id = None
+            stripe_premium_price_id = None
         
         # Create Free Plan (no Stripe product needed)
         free = Subscription(
@@ -253,8 +284,8 @@ def create_subscription_plans():
             price=5.0,
             monthly_credits=10,
             no_ads=True,
-            stripe_product_id=basic_product.id,
-            stripe_price_id=basic_price.id,
+            stripe_product_id=stripe_basic_product_id,
+            stripe_price_id=stripe_basic_price_id,
             features={
                 'credits': 10,
                 'ads': False,
@@ -270,8 +301,8 @@ def create_subscription_plans():
             price=10.0,
             monthly_credits=100,
             no_ads=True,
-            stripe_product_id=premium_product.id,
-            stripe_price_id=premium_price.id,
+            stripe_product_id=stripe_premium_product_id,
+            stripe_price_id=stripe_premium_price_id,
             features={
                 'credits': 100,
                 'ads': False,
