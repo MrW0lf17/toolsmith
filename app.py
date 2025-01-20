@@ -866,11 +866,76 @@ def add_credits():
     db.session.commit()
     return jsonify({'credits': current_user.credits})
 
+def get_proxy_url(url: str) -> str:
+    """Convert an image URL to a proxied URL that doesn't expire"""
+    try:
+        # Extract the base64-encoded part after 'imgproxy'
+        base_url = "https://api.together.ai/imgproxy/"
+        if base_url in url:
+            # Already a proxied URL, return as is
+            return url
+            
+        # If it's an S3 URL, convert it to a proxied URL
+        if "amazonaws.com" in url:
+            parts = url.split('?')
+            if len(parts) > 0:
+                # Take just the base URL without query parameters
+                return parts[0]
+        
+        return url
+    except Exception as e:
+        app.logger.error(f"Error creating proxy URL: {str(e)}")
+        return url
+
 @app.route('/images')
 @login_required
 def images():
     user_images = Image.query.filter_by(user_id=current_user.id).order_by(Image.created_at.desc()).all()
+    # Convert image URLs to proxy URLs
+    for image in user_images:
+        image.image_url = get_proxy_url(image.image_url)
     return render_template('images.html', images=user_images)
+
+@app.route('/serve-image/<int:image_id>')
+@login_required
+def serve_image(image_id):
+    """Serve an image from the database"""
+    image = Image.query.get_or_404(image_id)
+    
+    # Verify the image belongs to the current user
+    if image.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        # Get the proxy URL
+        proxy_url = get_proxy_url(image.image_url)
+        
+        # Download the image from the proxy URL with retries
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(proxy_url, timeout=10)
+                response.raise_for_status()
+                break
+            except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+                if attempt == max_retries - 1:  # Last attempt
+                    app.logger.error(f"Error serving image {image_id}: {str(e)}")
+                    abort(500)
+                continue
+        
+        # Serve the image with caching headers
+        return Response(
+            response.content,
+            mimetype='image/jpeg',
+            headers={
+                'Cache-Control': 'public, max-age=31536000',  # Cache for 1 year
+                'Content-Type': 'image/jpeg',
+                'X-Content-Type-Options': 'nosniff'  # Prevent MIME type sniffing
+            }
+        )
+    except Exception as e:
+        app.logger.error(f"Error serving image {image_id}: {str(e)}")
+        abort(500)
 
 @app.route('/download-image/<int:image_id>')
 @login_required
@@ -883,12 +948,14 @@ def download_image(image_id):
         abort(403)
     
     try:
-        # Download the image from the URL with retries
+        # Get the proxy URL
+        proxy_url = get_proxy_url(image.image_url)
+        
+        # Download the image from the proxy URL with retries
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # Use the original image URL from the database
-                response = requests.get(image.image_url, timeout=10)
+                response = requests.get(proxy_url, timeout=10)
                 response.raise_for_status()
                 break
             except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
@@ -913,45 +980,6 @@ def download_image(image_id):
         )
     except Exception as e:
         app.logger.error(f"Error downloading image {image_id}: {str(e)}")
-        abort(500)
-
-@app.route('/serve-image/<int:image_id>')
-@login_required
-def serve_image(image_id):
-    """Serve an image from the database"""
-    image = Image.query.get_or_404(image_id)
-    
-    # Verify the image belongs to the current user
-    if image.user_id != current_user.id:
-        abort(403)
-    
-    try:
-        # Download the image from the URL with retries
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                # Use the original image URL from the database
-                response = requests.get(image.image_url, timeout=10)
-                response.raise_for_status()
-                break
-            except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
-                if attempt == max_retries - 1:  # Last attempt
-                    app.logger.error(f"Error serving image {image_id}: {str(e)}")
-                    abort(500)
-                continue
-        
-        # Serve the image with caching headers
-        return Response(
-            response.content,
-            mimetype='image/jpeg',
-            headers={
-                'Cache-Control': 'public, max-age=31536000',  # Cache for 1 year
-                'Content-Type': 'image/jpeg',
-                'X-Content-Type-Options': 'nosniff'  # Prevent MIME type sniffing
-            }
-        )
-    except Exception as e:
-        app.logger.error(f"Error serving image {image_id}: {str(e)}")
         abort(500)
 
 @app.route('/subscribe/<int:plan_id>', methods=['POST'])
