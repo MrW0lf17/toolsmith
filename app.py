@@ -26,7 +26,6 @@ app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "dev-key-for-local-only"
 
 # Supported languages
 LANGUAGES = {
-    'fa': 'Persian',
     'en': 'English',
     'zh': 'Chinese',
     'it': 'Italian',
@@ -35,6 +34,7 @@ LANGUAGES = {
     'fr': 'French',
     'hi': 'Hindi',
     'ru': 'Russian',
+    'fa': 'Persian',
     'tr': 'Turkish',
     'az': 'Azerbaijani',
     'id': 'Indonesian'
@@ -42,7 +42,7 @@ LANGUAGES = {
 
 def _(text):
     """Translation function"""
-    lang = session.get('lang', 'fa')
+    lang = session.get('lang', 'en')
     return translations.get(lang, {}).get(text, text)
 
 @app.context_processor
