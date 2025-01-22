@@ -235,7 +235,7 @@ def create_subscription_plans():
             try:
                 basic_product = stripe.Product.create(
                     name='Basic VIP',
-                    description='Basic VIP subscription with 10 monthly credits'
+                    description='Basic VIP subscription with 100 monthly credits'
                 )
                 basic_price = stripe.Price.create(
                     product=basic_product.id,
@@ -247,7 +247,7 @@ def create_subscription_plans():
                 # Create Premium VIP Plan in Stripe
                 premium_product = stripe.Product.create(
                     name='Premium VIP',
-                    description='Premium VIP subscription with 100 monthly credits'
+                    description='Premium VIP subscription with 2000 monthly credits'
                 )
                 premium_price = stripe.Price.create(
                     product=premium_product.id,
@@ -291,12 +291,12 @@ def create_subscription_plans():
         basic = Subscription(
             name='Basic VIP',
             price=5.0,
-            monthly_credits=10,
+            monthly_credits=100,
             no_ads=True,
             stripe_product_id=stripe_basic_product_id,
             stripe_price_id=stripe_basic_price_id,
             features={
-                'credits': 10,
+                'credits': 100,
                 'ads': False,
                 'support': 'Priority',
                 'generation_speed': 'Fast',
@@ -308,12 +308,12 @@ def create_subscription_plans():
         premium = Subscription(
             name='Premium VIP',
             price=10.0,
-            monthly_credits=100,
+            monthly_credits=2000,
             no_ads=True,
             stripe_product_id=stripe_premium_product_id,
             stripe_price_id=stripe_premium_price_id,
             features={
-                'credits': 100,
+                'credits': 2000,
                 'ads': False,
                 'support': '24/7 Priority',
                 'generation_speed': 'Ultra-Fast',
