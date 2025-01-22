@@ -637,12 +637,12 @@ def generate_image(prompt: str, model: str = 'realistic') -> tuple:
     
     # Model-specific prompt enhancements with safety checks
     model_prompts = {
-        'realistic': f"{prompt}, high quality, detailed photograph",
-        'anime': f"{prompt}, anime style art",
-        'painting': f"{prompt}, digital painting style",
-        'pixel': f"{prompt}, pixel art style",
-        'minimal': f"{prompt}, minimalist style",
-        '3d': f"{prompt}, 3D render style"
+        'realistic': f"{prompt}, ultra-high resolution, lifelike details, professional photography",
+        'anime': f"{prompt}, vibrant colors, anime style, expressive characters, dynamic composition",
+        'painting': f"{prompt}, rich textures, digital painting, artistic brush strokes, vivid colors",
+        'pixel': f"{prompt}, retro pixel art, 8-bit style, nostalgic gaming aesthetics",
+        'minimal': f"{prompt}, clean lines, minimalist design, simple color palette, modern look",
+        '3d': f"{prompt}, high-quality 3D render, realistic lighting, detailed textures, immersive scene"
     }
     
     enhanced_prompt = model_prompts.get(model, model_prompts['realistic'])
