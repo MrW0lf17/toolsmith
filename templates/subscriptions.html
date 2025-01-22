@@ -2,6 +2,18 @@
 
 {% block content %}
 <div class="container py-5">
+    <!-- Add notification container -->
+    <div id="notification" class="fixed top-4 right-4 z-50 transform transition-transform duration-300 translate-x-full">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <i id="notification-icon" class="fas fa-check text-green-500"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p id="notification-message" class="text-sm text-gray-900 dark:text-white"></p>
+            </div>
+        </div>
+    </div>
+
     <h1 class="text-center mb-5 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">{{ _('Choose Your Plan') }}</h1>
     
     <!-- Stripe Elements -->
@@ -164,7 +176,42 @@
 </div>
 
 <script>
-const stripe = Stripe('{{ stripe_public_key }}');
+// Add notification system
+function showNotification(message, type = 'error') {
+    const notification = document.getElementById('notification');
+    const notificationMessage = document.getElementById('notification-message');
+    const notificationIcon = document.getElementById('notification-icon');
+    
+    notificationMessage.textContent = message;
+    
+    // Set icon and colors based on type
+    if (type === 'success') {
+        notificationIcon.className = 'fas fa-check text-green-500';
+    } else {
+        notificationIcon.className = 'fas fa-exclamation-circle text-red-500';
+    }
+    
+    // Show notification
+    notification.classList.remove('translate-x-full');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+    }, 3000);
+}
+
+// Initialize Stripe with error handling
+let stripe;
+try {
+    const stripeKey = '{{ stripe_public_key }}';
+    if (!stripeKey) {
+        throw new Error('Stripe public key is not set');
+    }
+    stripe = Stripe(stripeKey);
+} catch (error) {
+    console.error('Stripe initialization error:', error);
+    showNotification("{{ _('Payment system initialization failed. Please try again later.') }}", 'error');
+}
 
 // Add loading state management
 function setButtonLoading(button, isLoading) {

@@ -11,6 +11,8 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=your-client-id" crossorigin="anonymous"></script>
     <!-- Vazir Font -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet" type="text/css" />
+    <!-- Add flag icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.6.6/css/flag-icons.min.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Vazir', sans-serif;
@@ -48,23 +50,45 @@
         }
         .language-selector select {
             appearance: none;
-            background: transparent;
-            border: 1px solid rgba(139, 92, 246, 0.5);
-            border-radius: 0.5rem;
-            padding: 0.5rem 2rem 0.5rem 1rem;
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 0.5rem 2.5rem 0.5rem 2.5rem;
             color: #e5e7eb;
             cursor: pointer;
             font-size: 0.875rem;
             line-height: 1.25rem;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+        }
+        .language-selector::after {
+            content: '';
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.75rem;
+            height: 0.75rem;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238B5CF6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-            background-size: 1.5em 1.5em;
+            background-position: center;
+            background-size: contain;
+            pointer-events: none;
+        }
+        .language-selector select:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(17, 24, 39, 0.9);
         }
         .language-selector select:focus {
             outline: none;
             border-color: #8b5cf6;
             box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+        }
+        .language-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
         }
     </style>
 </head>
@@ -79,19 +103,43 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                     <div class="language-selector">
-                        <select id="language-select" onchange="changeLanguage(this.value)" class="bg-gray-800">
-                            <option value="fa" {{ 'selected' if session.get('lang') == 'fa' }}>فارسی</option>
-                            <option value="en" {{ 'selected' if session.get('lang') == 'en' }}>English</option>
-                            <option value="zh" {{ 'selected' if session.get('lang') == 'zh' }}>中文</option>
-                            <option value="it" {{ 'selected' if session.get('lang') == 'it' }}>Italiano</option>
-                            <option value="de" {{ 'selected' if session.get('lang') == 'de' }}>Deutsch</option>
-                            <option value="ja" {{ 'selected' if session.get('lang') == 'ja' }}>日本語</option>
-                            <option value="fr" {{ 'selected' if session.get('lang') == 'fr' }}>Français</option>
-                            <option value="hi" {{ 'selected' if session.get('lang') == 'hi' }}>हिन्दी</option>
-                            <option value="ru" {{ 'selected' if session.get('lang') == 'ru' }}>Русский</option>
-                            <option value="tr" {{ 'selected' if session.get('lang') == 'tr' }}>Türkçe</option>
-                            <option value="az" {{ 'selected' if session.get('lang') == 'az' }}>Azərbaycan</option>
-                            <option value="id" {{ 'selected' if session.get('lang') == 'id' }}>Bahasa Indonesia</option>
+                        <select id="language-select" onchange="changeLanguage(this.value)" class="pr-8">
+                            <option value="fa" {{ 'selected' if session.get('lang') == 'fa' }} class="language-option">
+                                <span class="flag-icon flag-icon-ir"></span> فارسی
+                            </option>
+                            <option value="en" {{ 'selected' if session.get('lang') == 'en' }} class="language-option">
+                                <span class="flag-icon flag-icon-gb"></span> English
+                            </option>
+                            <option value="zh" {{ 'selected' if session.get('lang') == 'zh' }} class="language-option">
+                                <span class="flag-icon flag-icon-cn"></span> 中文
+                            </option>
+                            <option value="it" {{ 'selected' if session.get('lang') == 'it' }} class="language-option">
+                                <span class="flag-icon flag-icon-it"></span> Italiano
+                            </option>
+                            <option value="de" {{ 'selected' if session.get('lang') == 'de' }} class="language-option">
+                                <span class="flag-icon flag-icon-de"></span> Deutsch
+                            </option>
+                            <option value="ja" {{ 'selected' if session.get('lang') == 'ja' }} class="language-option">
+                                <span class="flag-icon flag-icon-jp"></span> 日本語
+                            </option>
+                            <option value="fr" {{ 'selected' if session.get('lang') == 'fr' }} class="language-option">
+                                <span class="flag-icon flag-icon-fr"></span> Français
+                            </option>
+                            <option value="hi" {{ 'selected' if session.get('lang') == 'hi' }} class="language-option">
+                                <span class="flag-icon flag-icon-in"></span> हिन्दी
+                            </option>
+                            <option value="ru" {{ 'selected' if session.get('lang') == 'ru' }} class="language-option">
+                                <span class="flag-icon flag-icon-ru"></span> Русский
+                            </option>
+                            <option value="tr" {{ 'selected' if session.get('lang') == 'tr' }} class="language-option">
+                                <span class="flag-icon flag-icon-tr"></span> Türkçe
+                            </option>
+                            <option value="az" {{ 'selected' if session.get('lang') == 'az' }} class="language-option">
+                                <span class="flag-icon flag-icon-az"></span> Azərbaycan
+                            </option>
+                            <option value="id" {{ 'selected' if session.get('lang') == 'id' }} class="language-option">
+                                <span class="flag-icon flag-icon-id"></span> Bahasa Indonesia
+                            </option>
                         </select>
                     </div>
                     {% if current_user.is_authenticated %}
@@ -239,6 +287,17 @@
             document.body.innerHTML = 'Developer tools detected!';
         }
     }, 1000);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const languageSelect = document.getElementById('language-select');
+        const selectedOption = languageSelect.options[languageSelect.selectedIndex];
+        const flagCode = selectedOption.querySelector('.flag-icon').classList[1].split('-')[2];
+        
+        // Add flag before select
+        const flagSpan = document.createElement('span');
+        flagSpan.className = `flag-icon flag-icon-${flagCode} absolute left-2 top-1/2 transform -translate-y-1/2`;
+        languageSelect.parentNode.appendChild(flagSpan);
+    });
     </script>
 </body>
 </html> 
