@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'fa') }}" dir="{{ 'rtl' if session.get('lang', 'fa') in ['fa', 'ar'] else 'ltr' }}">
+<html lang="{{ session.get('lang', 'en') }}" dir="{{ 'rtl' if session.get('lang', 'en') in ['fa', 'ar'] else 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,11 +110,11 @@
                 <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                     <div class="language-selector">
                         <select id="language-select" onchange="changeLanguage(this.value)" class="pr-8">
-                            <option value="fa" {{ 'selected' if session.get('lang') == 'fa' }} class="language-option">
-                                <span class="flag-icon flag-icon-ir"></span> فارسی
-                            </option>
                             <option value="en" {{ 'selected' if session.get('lang') == 'en' }} class="language-option">
                                 <span class="flag-icon flag-icon-gb"></span> English
+                            </option>
+                            <option value="fa" {{ 'selected' if session.get('lang') == 'fa' }} class="language-option">
+                                <span class="flag-icon flag-icon-ir"></span> فارسی
                             </option>
                             <option value="zh" {{ 'selected' if session.get('lang') == 'zh' }} class="language-option">
                                 <span class="flag-icon flag-icon-cn"></span> 中文
