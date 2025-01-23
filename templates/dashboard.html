@@ -89,6 +89,7 @@
         </div>
         
         <!-- In-feed Ad -->
+        {% if not current_user.subscription %}
         <div class="mb-6 overflow-hidden rounded-lg">
             <ins class="adsbygoogle"
                  style="display:block"
@@ -97,6 +98,7 @@
                  data-ad-client="your-client-id"
                  data-ad-slot="your-infeed-slot"></ins>
         </div>
+        {% endif %}
         
         <div class="mb-4 sm:mb-6">
             <label for="prompt" class="block text-gray-300 text-sm font-bold mb-2">{{ _('Enter description of the image you want') }}</label>
@@ -123,7 +125,7 @@
             <button id="generate-btn" onclick="generateImage()"
                     class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-purple-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
                 <div class="magic-wand-svg">
-                    <svg width="24" height="24" viewBox="-20 -20 500 500" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="29" height="29" viewBox="-20 -20 500 500" xmlns="http://www.w3.org/2000/svg">
                         <g id="icon">
                             <circle id="circle" cx="256" cy="256" r="256" fill="#21D0C3"/>
                             <g id="lines" fill="#FEFEFE">
@@ -145,13 +147,11 @@
                 </div>
                 <span class="ml-2">{{ _('Generate Image (1 Credit)') }}</span>
             </button>
-            {% if not current_user.subscription or (current_user.subscription and current_user.subscription.name == 'Basic VIP') %}
             <button id="add-credits-btn" onclick="watchAd()"
                     class="w-full sm:w-auto flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 shadow-lg">
                 <img src="https://img.icons8.com/color/24/video-playlist.png" alt="Video" class="ml-2 w-5 h-5 sm:w-6 sm:h-6">
                 {{ _('Watch Ad for 3 Credits') }}
             </button>
-            {% endif %}
         </div>
     </div>
 
@@ -226,8 +226,8 @@
     /* ... existing styles ... */
     
     .magic-wand-svg {
-        width: 24px;
-        height: 24px;
+        width: 29px;
+        height: 29px;
         display: none;
     }
     
